@@ -343,6 +343,59 @@ export async function getAllUsers(): Promise<any[]> {
   }));
 }
 
+export async function deleteUser(email: string): Promise<boolean> {
+  const cleanEmail = email.trim().toLowerCase();
+  const db = await getDb();
+
+  if (db) {
+    try {
+      await db.collection("users").deleteOne({ email: cleanEmail });
+    } catch (e) {
+      console.error("[Database] Failed to delete user from MongoDB:", e);
+    }
+  }
+
+  delete memoryUserDb[cleanEmail];
+  try {
+    const fileDb = safeReadJson("user_stores.json", {});
+    delete fileDb[cleanEmail];
+    safeWriteJson("user_stores.json", fileDb);
+  } catch (e) {}
+
+  return true;
+}
+
+export async function deleteUserStore(email: string, storeId: string): Promise<boolean> {
+  const cleanEmail = email.trim().toLowerCase();
+  const db = await getDb();
+
+  if (db) {
+    try {
+      await db.collection("users").updateOne(
+        { email: cleanEmail },
+        { $pull: { stores: { id: storeId } } } as any
+      );
+    } catch (e) {
+      console.error("[Database] Failed to delete store from MongoDB:", e);
+    }
+  }
+
+  if (memoryUserDb[cleanEmail] && Array.isArray(memoryUserDb[cleanEmail].stores)) {
+    memoryUserDb[cleanEmail].stores = memoryUserDb[cleanEmail].stores.filter((s: any) => s.id !== storeId);
+  }
+  try {
+    const fileDb = safeReadJson("user_stores.json", {});
+    if (fileDb[cleanEmail] && Array.isArray(fileDb[cleanEmail].stores)) {
+      fileDb[cleanEmail].stores = fileDb[cleanEmail].stores.filter((s: any) => s.id !== storeId);
+      safeWriteJson("user_stores.json", fileDb);
+    }
+  } catch (e) {}
+
+  return true;
+}
+
+
+
 // --- ADMIN INSTRUCTIONS OPERATIONS ---
 
 export async function getAdminInstructions(): Promise<any> {

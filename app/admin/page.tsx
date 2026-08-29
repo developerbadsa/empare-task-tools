@@ -87,6 +87,48 @@ export default function AdminPage() {
     setLoading(false);
   }
 
+  function handleDeleteUser(email: string, e: React.MouseEvent) {
+    e.stopPropagation();
+    setConfirmAction({
+      title: "Delete User & Stores",
+      message: `Are you sure you want to delete user ${email} and all their stores?`,
+      confirmText: "Delete User",
+      isDestructive: true,
+      onConfirm: async () => {
+        try {
+          await fetch(`/api/admin/users?email=${encodeURIComponent(email)}`, { method: "DELETE" });
+          setUsers((prev) => prev.filter((u) => u.email !== email));
+        } catch (err) {}
+        setConfirmAction(null);
+      },
+    });
+  }
+
+  function handleDeleteUserStore(email: string, storeId: string, storeName: string) {
+    setConfirmAction({
+      title: "Delete Store",
+      message: `Are you sure you want to remove store "${storeName}" from user ${email}?`,
+      confirmText: "Delete Store",
+      isDestructive: true,
+      onConfirm: async () => {
+        try {
+          await fetch(`/api/admin/users?email=${encodeURIComponent(email)}&storeId=${encodeURIComponent(storeId)}`, {
+            method: "DELETE",
+          });
+          setUsers((prev) =>
+            prev.map((u) => {
+              if (u.email === email && u.stores) {
+                return { ...u, stores: u.stores.filter((s: any) => s.id !== storeId) };
+              }
+              return u;
+            })
+          );
+        } catch (err) {}
+        setConfirmAction(null);
+      },
+    });
+  }
+
   async function fetchMasterTasks() {
     setTasksLoading(true);
     try {
@@ -396,6 +438,13 @@ export default function AdminPage() {
                           <span className="text-xs font-semibold px-2.5 py-1 bg-slate-100 text-slate-800 rounded-[4px] border border-slate-200">
                             {storeCount} {storeCount === 1 ? "Store" : "Stores"}
                           </span>
+                          <button
+                            onClick={(e) => handleDeleteUser(user.email, e)}
+                            className="p-1 rounded-[4px] text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                            title="Delete User"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                           {isExpanded ? (
                             <ChevronUp className="w-4 h-4 text-slate-400" />
                           ) : (
@@ -421,6 +470,7 @@ export default function AdminPage() {
                                     <th className="py-2 px-2">Email</th>
                                     <th className="py-2 px-2">Currency</th>
                                     <th className="py-2 px-2">Language</th>
+                                    <th className="py-2 px-2 text-right">Action</th>
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-200 text-slate-700">
@@ -437,6 +487,15 @@ export default function AdminPage() {
                                       <td className="py-2.5 px-2 text-slate-600">{s.email || "N/A"}</td>
                                       <td className="py-2.5 px-2 font-bold">{s.currency || "N/A"}</td>
                                       <td className="py-2.5 px-2">{s.language || "N/A"}</td>
+                                      <td className="py-2.5 px-2 text-right">
+                                        <button
+                                          onClick={() => handleDeleteUserStore(user.email, s.id, s.name || "Store")}
+                                          className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                                          title="Remove this store"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      </td>
                                     </tr>
                                   ))}
                                 </tbody>
