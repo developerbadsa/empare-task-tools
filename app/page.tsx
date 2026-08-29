@@ -406,21 +406,31 @@ export default function Home() {
       }
     } catch (e) {}
 
+    // Check persistent user profile (localStorage + Cookie)
+    let foundProfile = false;
     try {
-      const savedUser = localStorage.getItem("store_toolkit_current_user");
+      let savedUser = localStorage.getItem("store_toolkit_current_user");
+      if (!savedUser && typeof document !== "undefined") {
+        const match = document.cookie.match(/(?:^|;\s*)store_toolkit_user=([^;]+)/);
+        if (match && match[1]) {
+          savedUser = decodeURIComponent(match[1]);
+        }
+      }
       if (savedUser) {
         const parsedUser = JSON.parse(savedUser);
-        if (parsedUser.email) {
+        if (parsedUser && parsedUser.email) {
           setCurrentUser(parsedUser);
+          setShowUserModal(false);
           loadUserData(parsedUser.email);
-          setIsLoaded(true);
-          return;
+          foundProfile = true;
         }
       }
     } catch (e) {}
 
-    // First time user: show popup
-    setShowUserModal(true);
+    // Only show modal if user has NEVER registered before
+    if (!foundProfile) {
+      setShowUserModal(true);
+    }
     setIsLoaded(true);
   }, []);
 
@@ -565,9 +575,12 @@ export default function Home() {
     e.preventDefault();
     if (!userForm.name.trim() || !userForm.email.trim()) return;
 
-    const profile = { name: userForm.name.trim(), email: userForm.email.trim() };
+    const profile = { name: userForm.name.trim(), email: userForm.email.trim().toLowerCase() };
     setCurrentUser(profile);
     localStorage.setItem("store_toolkit_current_user", JSON.stringify(profile));
+    try {
+      document.cookie = `store_toolkit_user=${encodeURIComponent(JSON.stringify(profile))}; path=/; max-age=315360000; SameSite=Lax`;
+    } catch (e) {}
     setShowUserModal(false);
     loadUserData(profile.email);
   }
@@ -1617,12 +1630,12 @@ export default function Home() {
         </div>
       )}
 
-      {showUserModal && (
+      {showUserModal && (!currentUser || !currentUser.email) && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white border border-slate-200 rounded-[4px] p-6 max-w-sm w-full shadow-2xl">
             <div className="flex items-center gap-2 mb-1.5">
               <Store className="w-5 h-5 text-slate-900" strokeWidth={2} />
-              <h3 className="text-base font-bold text-slate-900">Welcome to Store Toolkit</h3>
+              <h3 className="text-base font-bold text-slate-900">Welcome to Empire Production Hub</h3>
             </div>
             <p className="text-xs text-slate-500 mb-4">
               Enter your Name & Email once. Your stores and history will automatically stay saved to your profile even if you close the tab.
