@@ -450,71 +450,64 @@ export default function Home() {
     const promptsKey = "store_toolkit_prompts_" + cleanEmail;
     const tasksKey = "store_toolkit_tasks_" + cleanEmail;
 
-    // 1. Server is the Single Source of Truth
     try {
       const res = await fetch("/api/stores?email=" + encodeURIComponent(cleanEmail));
       const data = await res.json();
-      if (data.success && data.userData) {
-        const serverStores = Array.isArray(data.userData.stores)
-          ? data.userData.stores.map((s: StoreData) => ({
-              ...s,
-              rememberOptions: s.rememberOptions || [...getDefaultChecked(rememberPresets)],
-            }))
-          : [];
-        const nextActiveId = data.userData.activeId || (serverStores[0] ? serverStores[0].id : "");
+      if (data.success) {
+        if (data.userData) {
+          const serverStores = Array.isArray(data.userData.stores)
+            ? data.userData.stores.map((s: StoreData) => ({
+                ...s,
+                rememberOptions: s.rememberOptions || [...getDefaultChecked(rememberPresets)],
+              }))
+            : [];
+          const nextActiveId = data.userData.activeId || (serverStores[0] ? serverStores[0].id : "");
 
-        setStores(serverStores);
-        setActiveId(nextActiveId);
-        localStorage.setItem(storageKey, JSON.stringify({ stores: serverStores, activeId: nextActiveId }));
+          setStores(serverStores);
+          setActiveId(nextActiveId);
+          localStorage.setItem(storageKey, JSON.stringify({ stores: serverStores, activeId: nextActiveId }));
 
-        if (data.userData.customPrompts) {
-          setCustomPrompts(data.userData.customPrompts);
-          localStorage.setItem(promptsKey, JSON.stringify(data.userData.customPrompts));
+          if (data.userData.customPrompts) {
+            setCustomPrompts(data.userData.customPrompts);
+            localStorage.setItem(promptsKey, JSON.stringify(data.userData.customPrompts));
+          } else {
+            setCustomPrompts({});
+          }
+
+          if (data.userData.tasks) {
+            const rawMap = data.userData.tasks;
+            const migratedMap: Record<string, TaskItem[]> = {};
+            Object.keys(rawMap).forEach((k) => {
+              migratedMap[k] = migrateTasks(rawMap[k]);
+            });
+            setStoreTasks(migratedMap);
+            localStorage.setItem(tasksKey, JSON.stringify(migratedMap));
+          } else {
+            setStoreTasks({});
+          }
         } else {
+          // Clean fresh start - Clear all dirty caches
+          setStores([]);
+          setActiveId("");
           setCustomPrompts({});
-        }
-
-        if (data.userData.tasks) {
-          const rawMap = data.userData.tasks;
-          const migratedMap: Record<string, TaskItem[]> = {};
-          Object.keys(rawMap).forEach((k) => {
-            migratedMap[k] = migrateTasks(rawMap[k]);
-          });
-          setStoreTasks(migratedMap);
-          localStorage.setItem(tasksKey, JSON.stringify(migratedMap));
-        } else {
           setStoreTasks({});
+          try {
+            localStorage.removeItem(storageKey);
+            localStorage.removeItem(promptsKey);
+            localStorage.removeItem(tasksKey);
+          } catch (e) {}
         }
-
         setIsInitialized(true);
         return;
       }
     } catch (e) {}
 
-    // 2. If user is brand new or offline, check local cache or start fresh
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const d = JSON.parse(saved);
-        const cleanedStores = Array.isArray(d.stores)
-          ? d.stores.map((s: StoreData) => ({
-              ...s,
-              rememberOptions: s.rememberOptions || [...getDefaultChecked(rememberPresets)],
-            }))
-          : [];
-        setStores(cleanedStores);
-        setActiveId(d.activeId || (cleanedStores[0] ? cleanedStores[0].id : ""));
-      } else {
-        setStores([]);
-        setActiveId("");
-        localStorage.setItem(storageKey, JSON.stringify({ stores: [], activeId: "" }));
-      }
-    } catch (e) {
-      setStores([]);
-      setActiveId("");
-    }
+    // Offline / Error fallback: Start fresh and clean
+    setStores([]);
+    setActiveId("");
     setIsInitialized(true);
   }
+
 
   function syncToServer(
     name: string,
@@ -782,13 +775,21 @@ export default function Home() {
       confirmText: "Delete Store",
       isDestructive: true,
       onConfirm: () => {
-        var next = stores.filter(function(s) { return s.id !== id; });
+        const next = stores.filter(function(s) { return s.id !== id; });
+        const nextActiveId = activeId === id ? (next[0] ? next[0].id : "") : activeId;
         setStores(next);
-        if (activeId === id) setActiveId(next[0] ? next[0].id : "");
+        setActiveId(nextActiveId);
+        if (currentUser) {
+          const cleanEmail = currentUser.email.trim().toLowerCase();
+          const storageKey = "store_toolkit_data_" + cleanEmail;
+          localStorage.setItem(storageKey, JSON.stringify({ stores: next, activeId: nextActiveId }));
+          syncToServer(currentUser.name, cleanEmail, next, nextActiveId, customPrompts, storeTasks);
+        }
         setConfirmAction(null);
       },
     });
   }
+
 
   function editStore(s: StoreData) {
     setForm({
