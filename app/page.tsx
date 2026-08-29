@@ -518,6 +518,19 @@ export default function Home() {
     currentTasks?: Record<string, TaskItem[]>
   ) {
     if (!email) return;
+
+    // Strict sanitation: never send orphan tasks of deleted stores
+    const validStoreIds = new Set((currentStores || []).map((s) => s.id));
+    const tasksRaw = currentTasks !== undefined ? currentTasks : storeTasks;
+    const sanitizedTasks: Record<string, TaskItem[]> = {};
+    if (tasksRaw && typeof tasksRaw === "object") {
+      Object.keys(tasksRaw).forEach((k) => {
+        if (validStoreIds.has(k)) {
+          sanitizedTasks[k] = tasksRaw[k];
+        }
+      });
+    }
+
     try {
       fetch("/api/stores", {
         method: "POST",
@@ -528,11 +541,12 @@ export default function Home() {
           stores: currentStores,
           activeId: currentActiveId,
           customPrompts: currentPrompts !== undefined ? currentPrompts : customPrompts,
-          tasks: currentTasks !== undefined ? currentTasks : storeTasks,
+          tasks: sanitizedTasks,
         }),
       }).catch(() => {});
     } catch (e) {}
   }
+
 
   const isInitialLoad = useRef(true);
 
