@@ -18,9 +18,9 @@ export const metadata: Metadata = {
   title: "Store Prompt Toolkit",
   description: "Select store, pick template, copy, paste",
   icons: {
-    icon: "/fav.png",
-    shortcut: "/fav.png",
-    apple: "/fav.png",
+    icon: "/fav.jpg",
+    shortcut: "/fav.jpg",
+    apple: "/fav.jpg",
   },
 };
 
