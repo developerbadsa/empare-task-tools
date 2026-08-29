@@ -19,6 +19,7 @@ import {
   Megaphone,
   Sparkles,
   Info,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -512,10 +513,10 @@ export default function AdminPage() {
                         <button
                           type="button"
                           onClick={() => handleDeleteSubTask(cat.id, sub.id)}
-                          className="text-slate-400 hover:text-rose-600 p-1 text-xs"
+                          className="text-slate-400 hover:text-rose-600 p-1 cursor-pointer transition-colors"
                           title="Delete subtask"
                         >
-                          ✕
+                          <X className="w-3 h-3" />
                         </button>
                       </div>
                     ))}

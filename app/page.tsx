@@ -14,10 +14,10 @@ import {
   ChevronUp,
   ChevronRight,
   RotateCcw,
-  CheckCircle2,
   Megaphone,
-  Sparkles,
   ExternalLink,
+  Settings,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -962,9 +962,16 @@ export default function Home() {
                         <button
                           type="button"
                           onClick={function() { setShowPresetEditor(!showPresetEditor); }}
-                          className="text-[10px] text-slate-400 hover:text-slate-700 underline cursor-pointer"
+                          className="text-[10px] text-slate-500 hover:text-slate-900 inline-flex items-center gap-1 cursor-pointer"
                         >
-                          {showPresetEditor ? "Close Editor" : "⚙ Manage Presets"}
+                          {showPresetEditor ? (
+                            "Close Editor"
+                          ) : (
+                            <>
+                              <Settings className="w-3 h-3 text-slate-500" />
+                              <span>Manage Presets</span>
+                            </>
+                          )}
                         </button>
                       </div>
 
@@ -1005,7 +1012,9 @@ export default function Home() {
                                   ) : (
                                     <button type="button" onClick={function() { setEditingPreset({ id: opt.id, label: opt.label }); }} className="text-[10px] text-slate-400 hover:text-slate-700 cursor-pointer">Edit</button>
                                   )}
-                                  <button type="button" onClick={function() { deletePreset(opt.id); }} className="text-[10px] text-slate-400 hover:text-rose-600 cursor-pointer">✕</button>
+                                  <button type="button" onClick={function() { deletePreset(opt.id); }} className="text-slate-400 hover:text-rose-600 cursor-pointer p-0.5" title="Delete preset">
+                                    <X className="w-3 h-3" />
+                                  </button>
                                 </div>
                               );
                             })}
@@ -1553,9 +1562,10 @@ export default function Home() {
               </h3>
               <button
                 onClick={() => setEditingPrompt(null)}
-                className="text-slate-400 hover:text-slate-700 text-sm font-bold p-1"
+                className="text-slate-400 hover:text-slate-700 p-1 cursor-pointer transition-colors"
+                title="Close"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
