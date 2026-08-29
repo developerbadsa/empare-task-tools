@@ -66,6 +66,15 @@ export default function AdminPage() {
   const [instructionsLoading, setInstructionsLoading] = useState(false);
   const [instructionsSavedMsg, setInstructionsSavedMsg] = useState("");
 
+  // In-app non-blocking confirmation modal
+  const [confirmAction, setConfirmAction] = useState<{
+    title: string;
+    message: string;
+    confirmText?: string;
+    isDestructive?: boolean;
+    onConfirm: () => void;
+  } | null>(null);
+
   async function fetchUsers() {
     setLoading(true);
     try {
@@ -176,8 +185,16 @@ export default function AdminPage() {
   }
 
   function handleDeleteCategory(id: string) {
-    if (!confirm("Delete this entire category and its subtasks?")) return;
-    setMasterTasks(masterTasks.filter((t) => t.id !== id));
+    setConfirmAction({
+      title: "Delete Category",
+      message: "Are you sure you want to delete this entire category and its subtasks?",
+      confirmText: "Delete Category",
+      isDestructive: true,
+      onConfirm: () => {
+        setMasterTasks((prev) => prev.filter((t) => t.id !== id));
+        setConfirmAction(null);
+      },
+    });
   }
 
   function handleDeleteSubTask(parentId: string, subId: string) {
@@ -660,6 +677,34 @@ export default function AdminPage() {
           </div>
         )}
       </div>
+
+      {/* Modern In-App Confirmation Modal */}
+      {confirmAction && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-[6px] p-5 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            <h3 className="text-sm font-semibold text-slate-900 mb-1.5">{confirmAction.title}</h3>
+            <p className="text-xs text-slate-600 mb-5 leading-relaxed">{confirmAction.message}</p>
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setConfirmAction(null)}
+                className="text-xs h-8 px-3"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant={confirmAction.isDestructive ? "destructive" : "default"}
+                size="sm"
+                onClick={confirmAction.onConfirm}
+                className="text-xs h-8 px-3.5"
+              >
+                {confirmAction.confirmText || "Confirm"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

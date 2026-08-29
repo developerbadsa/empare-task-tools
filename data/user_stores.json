@@ -285,8 +285,8 @@
     "updatedAt": "2026-08-29T08:07:51.478Z"
   },
   "rahim@test.com": {
-    "name": "Rahim",
     "email": "rahim@test.com",
+    "name": "Rahim",
     "stores": [
       {
         "id": "poland-luminari",
@@ -328,6 +328,6 @@
     "activeId": "poland-luminari",
     "customPrompts": {},
     "tasks": {},
-    "updatedAt": "2026-08-29T09:05:05.151Z"
+    "updatedAt": "2026-08-29T09:59:02.119Z"
   }
 }

@@ -384,6 +384,15 @@ export default function Home() {
   const [newPresetLabel, setNewPresetLabel] = useState("");
   const [showPresetEditor, setShowPresetEditor] = useState(false);
 
+  // In-app non-blocking confirmation modal
+  const [confirmAction, setConfirmAction] = useState<{
+    title: string;
+    message: string;
+    confirmText?: string;
+    isDestructive?: boolean;
+    onConfirm: () => void;
+  } | null>(null);
+
   // 1. Check user profile on initial load and fetch admin instructions
   useEffect(() => {
     fetch("/api/admin/instructions")
@@ -562,8 +571,16 @@ export default function Home() {
   }
 
   function deletePreset(id: string) {
-    if (!confirm("Delete this preset?")) return;
-    setRememberPresets(rememberPresets.filter((p) => p.id !== id));
+    setConfirmAction({
+      title: "Delete Preset",
+      message: "Are you sure you want to delete this preset?",
+      confirmText: "Delete",
+      isDestructive: true,
+      onConfirm: () => {
+        setRememberPresets((prev) => prev.filter((p) => p.id !== id));
+        setConfirmAction(null);
+      },
+    });
   }
 
   function togglePresetDefault(id: string) {
@@ -577,8 +594,16 @@ export default function Home() {
   }
 
   function resetPresetsToDefault() {
-    if (!confirm("Reset all presets to default?")) return;
-    setRememberPresets(DEFAULT_REMEMBER_PRESETS);
+    setConfirmAction({
+      title: "Reset Presets",
+      message: "Reset all presets back to system defaults?",
+      confirmText: "Reset Defaults",
+      isDestructive: false,
+      onConfirm: () => {
+        setRememberPresets(DEFAULT_REMEMBER_PRESETS);
+        setConfirmAction(null);
+      },
+    });
   }
 
   function handleSaveUser(e: React.FormEvent) {
@@ -727,8 +752,16 @@ export default function Home() {
   }
 
   function resetStoreTasks() {
-    if (!confirm("Reset checklist for this store back to default?")) return;
-    saveActiveTasks(DEFAULT_STORE_TASKS);
+    setConfirmAction({
+      title: "Reset Store Checklist",
+      message: "Reset the checklist for this store back to default tasks?",
+      confirmText: "Reset Checklist",
+      isDestructive: false,
+      onConfirm: () => {
+        saveActiveTasks(DEFAULT_STORE_TASKS);
+        setConfirmAction(null);
+      },
+    });
   }
 
   function addStore() {
@@ -746,10 +779,18 @@ export default function Home() {
   }
 
   function deleteStore(id: string) {
-    if (!confirm("Delete?")) return;
-    var next = stores.filter(function(s) { return s.id !== id; });
-    setStores(next);
-    if (activeId === id) setActiveId(next[0] ? next[0].id : "");
+    setConfirmAction({
+      title: "Delete Store",
+      message: "Are you sure you want to remove this store?",
+      confirmText: "Delete Store",
+      isDestructive: true,
+      onConfirm: () => {
+        var next = stores.filter(function(s) { return s.id !== id; });
+        setStores(next);
+        if (activeId === id) setActiveId(next[0] ? next[0].id : "");
+        setConfirmAction(null);
+      },
+    });
   }
 
   function editStore(s: StoreData) {
@@ -1716,6 +1757,34 @@ export default function Home() {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modern In-App Confirmation Modal */}
+      {confirmAction && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-[6px] p-5 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            <h3 className="text-sm font-semibold text-slate-900 mb-1.5">{confirmAction.title}</h3>
+            <p className="text-xs text-slate-600 mb-5 leading-relaxed">{confirmAction.message}</p>
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setConfirmAction(null)}
+                className="text-xs h-8 px-3"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant={confirmAction.isDestructive ? "destructive" : "default"}
+                size="sm"
+                onClick={confirmAction.onConfirm}
+                className="text-xs h-8 px-3.5"
+              >
+                {confirmAction.confirmText || "Confirm"}
+              </Button>
+            </div>
           </div>
         </div>
       )}

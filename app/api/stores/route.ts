@@ -1,46 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const DB_FILE = path.join(DATA_DIR, "user_stores.json");
-
-function ensureDbFile() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-  if (!fs.existsSync(DB_FILE)) {
-    fs.writeFileSync(DB_FILE, JSON.stringify({}), "utf-8");
-  }
-}
-
-function readDb(): Record<string, any> {
-  ensureDbFile();
-  try {
-    const raw = fs.readFileSync(DB_FILE, "utf-8");
-    return JSON.parse(raw || "{}");
-  } catch (e) {
-    return {};
-  }
-}
-
-function writeDb(data: Record<string, any>) {
-  ensureDbFile();
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), "utf-8");
-}
+import { getUserData, saveUserData } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const email = searchParams.get("email")?.trim().toLowerCase();
+  try {
+    const { searchParams } = new URL(req.url);
+    const email = searchParams.get("email")?.trim().toLowerCase();
 
-  if (!email) {
-    return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    if (!email) {
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    }
+
+    const userData = await getUserData(email);
+    return NextResponse.json({ success: true, userData });
+  } catch (e: any) {
+    return NextResponse.json({ success: true, userData: null });
   }
-
-  const db = readDb();
-  const userData = db[email] || null;
-
-  return NextResponse.json({ success: true, userData });
 }
 
 export async function POST(req: NextRequest) {
@@ -57,21 +31,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
-    const db = readDb();
-    db[email] = {
-      name: name || db[email]?.name || "",
-      email: email,
-      stores: stores,
-      activeId: activeId,
-      customPrompts: customPrompts,
-      tasks: tasks,
-      updatedAt: new Date().toISOString(),
-    };
+    const savedUser = await saveUserData({
+      email,
+      name,
+      stores,
+      activeId,
+      customPrompts,
+      tasks,
+    });
 
-    writeDb(db);
-
-    return NextResponse.json({ success: true, userData: db[email] });
+    return NextResponse.json({ success: true, userData: savedUser });
   } catch (e: any) {
     return NextResponse.json({ error: e.message || "Failed to save" }, { status: 500 });
   }
 }
+

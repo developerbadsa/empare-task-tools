@@ -1,34 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const INSTRUCTIONS_FILE = path.join(DATA_DIR, "admin_instructions.json");
-
-export const MASTER_TEAM_INSTRUCTIONS = {
-  title: "PM Notice",
-  text: `• Title, description and image obossoy professional hoite hobe.\n• Jodi kuno store a 60 days thake seyta replace kore 30 days korte hobe.\n• Monday te 'Done' dewua thaka store a login/edit korar dorkar nai.`,
-  isActive: true,
-  updatedAt: new Date().toISOString(),
-};
-
-function ensureInstructionsFile() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-  if (!fs.existsSync(INSTRUCTIONS_FILE)) {
-    fs.writeFileSync(INSTRUCTIONS_FILE, JSON.stringify(MASTER_TEAM_INSTRUCTIONS, null, 2), "utf-8");
-  }
-}
+import { getAdminInstructions, saveAdminInstructions } from "@/lib/db";
 
 export async function GET() {
   try {
-    ensureInstructionsFile();
-    const raw = fs.readFileSync(INSTRUCTIONS_FILE, "utf-8");
-    const data = JSON.parse(raw || "{}");
-    return NextResponse.json({ success: true, instructions: data.text ? data : MASTER_TEAM_INSTRUCTIONS });
+    const instructions = await getAdminInstructions();
+    return NextResponse.json({ success: true, instructions });
   } catch (e: any) {
-    return NextResponse.json({ success: true, instructions: MASTER_TEAM_INSTRUCTIONS });
+    return NextResponse.json({ success: true, instructions: null });
   }
 }
 
@@ -37,18 +15,15 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { title, text, isActive } = body;
 
-    const data = {
-      title: title || MASTER_TEAM_INSTRUCTIONS.title,
-      text: typeof text === "string" ? text : MASTER_TEAM_INSTRUCTIONS.text,
-      isActive: isActive !== undefined ? Boolean(isActive) : true,
-      updatedAt: new Date().toISOString(),
-    };
-
-    ensureInstructionsFile();
-    fs.writeFileSync(INSTRUCTIONS_FILE, JSON.stringify(data, null, 2), "utf-8");
+    const data = await saveAdminInstructions({
+      title,
+      text,
+      isActive,
+    });
 
     return NextResponse.json({ success: true, instructions: data });
   } catch (e: any) {
     return NextResponse.json({ error: e.message || "Failed to save instructions" }, { status: 500 });
   }
 }
+
