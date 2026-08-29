@@ -1232,6 +1232,74 @@ export default function Home() {
                       </button>
                     </div>
                   </div>
+
+                  {/* 4. Verification Checklist (Synced with Master Checklist) */}
+                  <div className="pt-2 border-t border-slate-100 space-y-2">
+                    <span className="text-xs font-bold text-slate-800 uppercase tracking-wide block">
+                      4. Verification Checklist (Did you complete these?)
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <label className="flex items-center gap-2 text-xs text-slate-800 cursor-pointer select-none bg-slate-50 p-2.5 rounded-[4px] border border-slate-200 hover:border-slate-300 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(activeSubTaskMap["sub-parcel-panel-config"])}
+                          onChange={() => toggleSubTask("task-tracking-parcel", "sub-parcel-panel-config")}
+                          className="w-4 h-4 accent-slate-900 rounded-[2px] cursor-pointer"
+                        />
+                        <span className={activeSubTaskMap["sub-parcel-panel-config"] ? "line-through text-slate-400" : "font-medium"}>
+                          Parcel Panel configured & live
+                        </span>
+                      </label>
+
+                      <label className="flex items-center gap-2 text-xs text-slate-800 cursor-pointer select-none bg-slate-50 p-2.5 rounded-[4px] border border-slate-200 hover:border-slate-300 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(activeSubTaskMap["sub-shipment-statuses"])}
+                          onChange={() => toggleSubTask("task-tracking-parcel", "sub-shipment-statuses")}
+                          className="w-4 h-4 accent-slate-900 rounded-[2px] cursor-pointer"
+                        />
+                        <span className={activeSubTaskMap["sub-shipment-statuses"] ? "line-through text-slate-400" : "font-medium"}>
+                          Added 3 Custom Statuses (3, 6, 9 days)
+                        </span>
+                      </label>
+
+                      <label className="flex items-center gap-2 text-xs text-slate-800 cursor-pointer select-none bg-slate-50 p-2.5 rounded-[4px] border border-slate-200 hover:border-slate-300 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(activeSubTaskMap["sub-tracking-url-works"])}
+                          onChange={() => toggleSubTask("task-tracking-parcel", "sub-tracking-url-works")}
+                          className="w-4 h-4 accent-slate-900 rounded-[2px] cursor-pointer"
+                        />
+                        <span className={activeSubTaskMap["sub-tracking-url-works"] ? "line-through text-slate-400" : "font-medium"}>
+                          Added Filter Keywords & tested URL
+                        </span>
+                      </label>
+
+                      <label className="flex items-center gap-2 text-xs text-slate-800 cursor-pointer select-none bg-slate-50 p-2.5 rounded-[4px] border border-slate-200 hover:border-slate-300 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(activeSubTaskMap["sub-remove-cwill"])}
+                          onChange={() => toggleSubTask("task-cwill-removal", "sub-remove-cwill")}
+                          className="w-4 h-4 accent-slate-900 rounded-[2px] cursor-pointer"
+                        />
+                        <span className={activeSubTaskMap["sub-remove-cwill"] ? "line-through text-slate-400" : "font-medium"}>
+                          Sent CWILL support removal message
+                        </span>
+                      </label>
+
+                      <label className="flex items-center gap-2 text-xs text-slate-800 cursor-pointer select-none bg-slate-50 p-2.5 rounded-[4px] border border-slate-200 hover:border-slate-300 transition-colors sm:col-span-2">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(activeSubTaskMap["sub-recheck-cwill"])}
+                          onChange={() => toggleSubTask("task-cwill-removal", "sub-recheck-cwill")}
+                          className="w-4 h-4 accent-slate-900 rounded-[2px] cursor-pointer"
+                        />
+                        <span className={activeSubTaskMap["sub-recheck-cwill"] ? "line-through text-slate-400" : "font-medium"}>
+                          Re-checked storefront — "Powered by CWILL" badge removed
+                        </span>
+                      </label>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 /* Regular Prompt Preview Card */
