@@ -1,0 +1,5 @@
+.freebuff/
+*.log
+*.log.err
+node_modules/
+.DS_Store

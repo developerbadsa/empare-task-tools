@@ -119,21 +119,17 @@ Then give each translation separately in its own copyable code block
 so each one has its own copy icon.
 ```
 
-### 6. China Keyword Removal
+### 6. Parcel Panel / CWILL Filter Keywords (To Add in Tracking Settings)
 ```
-Remove all references to China from the following text/product listing:
+Add all of these keywords into Parcel Panel / CWILL Filter Keywords settings
+so that China & supplier origins are automatically blocked/filtered from tracking updates:
 
-Banned keywords to find and remove:
+Keywords to add:
 China, Made in China, Chinese, China origin, Manufactured in China, Shenzhen,
 Factory direct, Chinese supplier, AliExpress, AliBaba, Taobao, Global Sources,
 Dropshipping, Wholesale China, Direct from China, Chinese factory, Chinese goods,
 China wholesale, JD.com, Tmall, 1688.com, Pinduoduo, Gearbest, DHgate,
 Banggood, Chinese cities
-
-If any of these appear in product titles, descriptions, bullet points,
-or any text — remove or replace them with clean, neutral alternatives.
-
-Keep the rest of the content intact. Do not change product meaning or features.
 ```
 
 ### 7. Currency Formatting
