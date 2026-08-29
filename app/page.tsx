@@ -618,6 +618,37 @@ export default function Home() {
     });
   }
 
+  function addStore() {
+    var id = Date.now().toString();
+    const newStore = { ...form, id: id };
+    const next = stores.concat([newStore]);
+    setStores(next);
+    setActiveId(id);
+    setForm({ ...emptyStore, rememberOptions: [...getDefaultChecked(rememberPresets)] });
+    setShowForm(false);
+
+    if (currentUser) {
+      const cleanEmail = currentUser.email.trim().toLowerCase();
+      const storageKey = "store_toolkit_data_" + cleanEmail;
+      localStorage.setItem(storageKey, JSON.stringify({ stores: next, activeId: id }));
+      syncToServer(currentUser.name, cleanEmail, next, id, customPrompts, storeTasks);
+    }
+  }
+
+  function updateStore() {
+    const next = stores.map((s) => (s.id === form.id ? form : s));
+    setStores(next);
+    setForm({ ...emptyStore, rememberOptions: [...getDefaultChecked(rememberPresets)] });
+    setShowForm(false);
+
+    if (currentUser) {
+      const cleanEmail = currentUser.email.trim().toLowerCase();
+      const storageKey = "store_toolkit_data_" + cleanEmail;
+      localStorage.setItem(storageKey, JSON.stringify({ stores: next, activeId: activeId }));
+      syncToServer(currentUser.name, cleanEmail, next, activeId, customPrompts, storeTasks);
+    }
+  }
+
   function handleSaveUser(e: React.FormEvent) {
     e.preventDefault();
     if (!userForm.name.trim() || !userForm.email.trim()) return;
@@ -629,6 +660,7 @@ export default function Home() {
       document.cookie = `store_toolkit_user=${encodeURIComponent(JSON.stringify(profile))}; path=/; max-age=315360000; SameSite=Lax`;
     } catch (e) {}
     setShowUserModal(false);
+    setIsInitialized(false);
     loadUserData(profile.email);
   }
 
@@ -776,19 +808,6 @@ export default function Home() {
     });
   }
 
-  function addStore() {
-    var id = Date.now().toString();
-    setStores(stores.concat([{ ...form, id: id }]));
-    setActiveId(id);
-    setForm({ ...emptyStore, rememberOptions: [...getDefaultChecked(rememberPresets)] });
-    setShowForm(false);
-  }
-
-  function updateStore() {
-    setStores(stores.map(function(s) { return s.id === form.id ? form : s; }));
-    setForm({ ...emptyStore, rememberOptions: [...getDefaultChecked(rememberPresets)] });
-    setShowForm(false);
-  }
 
   function deleteStore(id: string) {
     setConfirmAction({
@@ -1039,7 +1058,152 @@ export default function Home() {
           </div>
         )}
 
-        {!active && stores.length === 0 && (
+        {/* Store Form (Add / Edit Store) */}
+        {showForm && (
+          <div className="bg-white border border-slate-200 rounded-[4px] p-6 shadow-sm mb-6">
+            <h3 className="text-base font-bold text-slate-900 mb-4">{form.id ? "Edit Store" : "Add New Store"}</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {fields.map(function(f) {
+                return (
+                  <div key={f.key}>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">
+                      {f.label} {f.r && <span className="text-rose-500">*</span>}
+                    </label>
+                    <input
+                      type="text"
+                      value={(form as any)[f.key] || ""}
+                      onChange={function(e) { setForm({ ...form, [f.key]: e.target.value }); }}
+                      placeholder={f.placeholder}
+                      className="w-full px-3 py-2 rounded-[4px] border border-slate-300 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-950"
+                    />
+                  </div>
+                );
+              })}
+
+              {/* Things to Remember Options */}
+              <div className="sm:col-span-2">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-medium text-slate-500">
+                    Things to Remember Options
+                  </label>
+                  <button
+                    type="button"
+                    onClick={function() { setShowPresetEditor(!showPresetEditor); }}
+                    className="text-[10px] text-slate-500 hover:text-slate-900 inline-flex items-center gap-1 cursor-pointer"
+                  >
+                    {showPresetEditor ? (
+                      "Close Editor"
+                    ) : (
+                      <>
+                        <Settings className="w-3 h-3 text-slate-500" />
+                        <span>Manage Presets</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Preset Admin Editor (collapsible) */}
+                {showPresetEditor && (
+                  <div className="bg-slate-100 border border-slate-200 rounded-[4px] p-3 mb-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wide">Manage Presets</span>
+                      <button type="button" onClick={resetPresetsToDefault} className="text-[10px] text-slate-400 hover:text-rose-600 cursor-pointer">Reset Default</button>
+                    </div>
+                    <div className="space-y-1.5 mb-3">
+                      {rememberPresets.map(function(opt) {
+                        return (
+                          <div key={opt.id} className="flex items-center gap-2 bg-white border border-slate-200 rounded-[4px] px-2.5 py-1.5">
+                            {editingPreset && editingPreset.id === opt.id ? (
+                              <input
+                                type="text"
+                                value={editingPreset.label}
+                                onChange={function(e) { setEditingPreset({ ...editingPreset, label: e.target.value }); }}
+                                onKeyDown={function(e) { if (e.key === "Enter") saveEditedPreset(); }}
+                                className="flex-1 px-2 py-0.5 text-xs rounded-[4px] border border-slate-300 focus:outline-none focus:ring-1 focus:ring-slate-900"
+                                autoFocus
+                              />
+                            ) : (
+                              <span className="flex-1 text-xs text-slate-700 truncate">{opt.label}</span>
+                            )}
+                            <label className="flex items-center gap-1 text-[10px] text-slate-500 cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                checked={opt.defaultChecked}
+                                onChange={function() { togglePresetDefault(opt.id); }}
+                                className="w-3 h-3 accent-slate-900 rounded-[2px]"
+                              />
+                              <span>Default on</span>
+                            </label>
+                            {editingPreset && editingPreset.id === opt.id ? (
+                              <button type="button" onClick={saveEditedPreset} className="text-[10px] text-emerald-600 hover:text-emerald-800 font-bold cursor-pointer">Save</button>
+                            ) : (
+                              <button type="button" onClick={function() { setEditingPreset({ id: opt.id, label: opt.label }); }} className="text-[10px] text-slate-400 hover:text-slate-700 cursor-pointer">Edit</button>
+                            )}
+                            <button type="button" onClick={function() { deletePreset(opt.id); }} className="text-slate-400 hover:text-rose-600 cursor-pointer p-0.5" title="Delete preset">
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {/* Add new preset */}
+                    <div className="flex gap-1.5">
+                      <input
+                        type="text"
+                        value={newPresetLabel}
+                        onChange={function(e) { setNewPresetLabel(e.target.value); }}
+                        onKeyDown={function(e) { if (e.key === "Enter") addPreset(); }}
+                        placeholder="+ Add new preset..."
+                        className="flex-1 px-2.5 py-1.5 text-xs rounded-[4px] border border-slate-200 focus:outline-none focus:ring-1 focus:ring-slate-900"
+                      />
+                      <button type="button" onClick={addPreset} className="px-3 py-1.5 text-xs font-medium rounded-[4px] bg-slate-900 text-white hover:bg-slate-800 cursor-pointer">Add</button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Preset Checkboxes */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 border border-slate-200 rounded-[4px] p-3 mb-3">
+                  {rememberPresets.map(function(opt) {
+                    const isChecked = (form.rememberOptions || []).includes(opt.label);
+                    return (
+                      <label
+                        key={opt.id}
+                        className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer select-none"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={function() { toggleOption(opt.label); }}
+                          className="w-3.5 h-3.5 accent-slate-900 rounded-[2px]"
+                        />
+                        <span>{opt.label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+
+                {/* Additional Notes Textarea */}
+                <label className="block text-xs font-medium text-slate-500 mb-1">
+                  Things to Remember (Detailed Notes — Optional)
+                </label>
+                <textarea
+                  value={form.notes}
+                  onChange={function(e) { setForm({ ...form, notes: e.target.value }); }}
+                  rows={4}
+                  placeholder={"e.g.\n• Shipping always free\n• USA store cart drawer reference: https://egleboutique.com/ (use same payment icons & cart text)\n• Verify payment methods for the country"}
+                  className="w-full px-3 py-2 rounded-[4px] border border-slate-300 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-950 resize-none font-mono text-xs leading-relaxed"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-4">
+              <Button variant="outline" size="sm" onClick={function() { setShowForm(false); }}>Cancel</Button>
+              <Button variant="default" size="sm" onClick={form.id ? updateStore : addStore}>{form.id ? "Update" : "Save Store"}</Button>
+            </div>
+          </div>
+        )}
+
+        {!active && stores.length === 0 && !showForm && (
           <div className="text-center py-20">
             <Store className="w-10 h-10 text-slate-300 mx-auto mb-3" strokeWidth={1.5} />
             <p className="text-sm text-slate-500 mb-4">No stores yet</p>
@@ -1060,150 +1224,7 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Left Column: Form & Prompts (lg:col-span-7 xl:col-span-8) */}
             <div className="lg:col-span-7 xl:col-span-8 space-y-4">
-              {/* Store Form Inline Section */}
-              {showForm && (
-                <div className="bg-white border border-slate-200 rounded-[4px] p-6 shadow-sm">
-                  <h3 className="text-base font-bold text-slate-900 mb-4">{form.id ? "Edit Store" : "Add New Store"}</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {fields.map(function(f) {
-                      return (
-                        <div key={f.key}>
-                          <label className="block text-xs font-medium text-slate-500 mb-1">
-                            {f.label} {f.r && <span className="text-rose-500">*</span>}
-                          </label>
-                          <input
-                            type="text"
-                            value={(form as any)[f.key] || ""}
-                            onChange={function(e) { setForm({ ...form, [f.key]: e.target.value }); }}
-                            placeholder={f.placeholder}
-                            className="w-full px-3 py-2 rounded-[4px] border border-slate-300 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-950"
-                          />
-                        </div>
-                      );
-                    })}
 
-                    {/* Things to Remember Options */}
-                    <div className="sm:col-span-2">
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="block text-xs font-medium text-slate-500">
-                          Things to Remember Options
-                        </label>
-                        <button
-                          type="button"
-                          onClick={function() { setShowPresetEditor(!showPresetEditor); }}
-                          className="text-[10px] text-slate-500 hover:text-slate-900 inline-flex items-center gap-1 cursor-pointer"
-                        >
-                          {showPresetEditor ? (
-                            "Close Editor"
-                          ) : (
-                            <>
-                              <Settings className="w-3 h-3 text-slate-500" />
-                              <span>Manage Presets</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-
-                      {/* Preset Admin Editor (collapsible) */}
-                      {showPresetEditor && (
-                        <div className="bg-slate-100 border border-slate-200 rounded-[4px] p-3 mb-3">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wide">Manage Presets</span>
-                            <button type="button" onClick={resetPresetsToDefault} className="text-[10px] text-slate-400 hover:text-rose-600 cursor-pointer">Reset Default</button>
-                          </div>
-                          <div className="space-y-1.5 mb-3">
-                            {rememberPresets.map(function(opt) {
-                              return (
-                                <div key={opt.id} className="flex items-center gap-2 bg-white border border-slate-200 rounded-[4px] px-2.5 py-1.5">
-                                  {editingPreset && editingPreset.id === opt.id ? (
-                                    <input
-                                      type="text"
-                                      value={editingPreset.label}
-                                      onChange={function(e) { setEditingPreset({ ...editingPreset, label: e.target.value }); }}
-                                      onKeyDown={function(e) { if (e.key === "Enter") saveEditedPreset(); }}
-                                      className="flex-1 px-2 py-0.5 text-xs rounded-[4px] border border-slate-300 focus:outline-none focus:ring-1 focus:ring-slate-900"
-                                      autoFocus
-                                    />
-                                  ) : (
-                                    <span className="flex-1 text-xs text-slate-700 truncate">{opt.label}</span>
-                                  )}
-                                  <label className="flex items-center gap-1 text-[10px] text-slate-500 cursor-pointer select-none">
-                                    <input
-                                      type="checkbox"
-                                      checked={opt.defaultChecked}
-                                      onChange={function() { togglePresetDefault(opt.id); }}
-                                      className="w-3 h-3 accent-slate-900 rounded-[2px]"
-                                    />
-                                    <span>Default on</span>
-                                  </label>
-                                  {editingPreset && editingPreset.id === opt.id ? (
-                                    <button type="button" onClick={saveEditedPreset} className="text-[10px] text-emerald-600 hover:text-emerald-800 font-bold cursor-pointer">Save</button>
-                                  ) : (
-                                    <button type="button" onClick={function() { setEditingPreset({ id: opt.id, label: opt.label }); }} className="text-[10px] text-slate-400 hover:text-slate-700 cursor-pointer">Edit</button>
-                                  )}
-                                  <button type="button" onClick={function() { deletePreset(opt.id); }} className="text-slate-400 hover:text-rose-600 cursor-pointer p-0.5" title="Delete preset">
-                                    <X className="w-3 h-3" />
-                                  </button>
-                                </div>
-                              );
-                            })}
-                          </div>
-                          {/* Add new preset */}
-                          <div className="flex gap-1.5">
-                            <input
-                              type="text"
-                              value={newPresetLabel}
-                              onChange={function(e) { setNewPresetLabel(e.target.value); }}
-                              onKeyDown={function(e) { if (e.key === "Enter") addPreset(); }}
-                              placeholder="+ Add new preset..."
-                              className="flex-1 px-2.5 py-1.5 text-xs rounded-[4px] border border-slate-200 focus:outline-none focus:ring-1 focus:ring-slate-900"
-                            />
-                            <button type="button" onClick={addPreset} className="px-3 py-1.5 text-xs font-medium rounded-[4px] bg-slate-900 text-white hover:bg-slate-800 cursor-pointer">Add</button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Preset Checkboxes */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 border border-slate-200 rounded-[4px] p-3 mb-3">
-                        {rememberPresets.map(function(opt) {
-                          const isChecked = (form.rememberOptions || []).includes(opt.label);
-                          return (
-                            <label
-                              key={opt.id}
-                              className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer select-none"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={isChecked}
-                                onChange={function() { toggleOption(opt.label); }}
-                                className="w-3.5 h-3.5 accent-slate-900 rounded-[2px]"
-                              />
-                              <span>{opt.label}</span>
-                            </label>
-                          );
-                        })}
-                      </div>
-
-                      {/* Additional Notes Textarea */}
-                      <label className="block text-xs font-medium text-slate-500 mb-1">
-                        Things to Remember (Detailed Notes — Optional)
-                      </label>
-                      <textarea
-                        value={form.notes}
-                        onChange={function(e) { setForm({ ...form, notes: e.target.value }); }}
-                        rows={4}
-                        placeholder={"e.g.\n• Shipping always free\n• USA store cart drawer reference: https://egleboutique.com/ (use same payment icons & cart text)\n• Verify payment methods for the country"}
-                        className="w-full px-3 py-2 rounded-[4px] border border-slate-300 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-950 resize-none font-mono text-xs leading-relaxed"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 mt-4">
-                    <Button variant="outline" size="sm" onClick={function() { setShowForm(false); }}>Cancel</Button>
-                    <Button variant="default" size="sm" onClick={form.id ? updateStore : addStore}>{form.id ? "Update" : "Save Store"}</Button>
-                  </div>
-                </div>
-              )}
 
               {/* Prompt Tabs */}
               <div className="flex flex-wrap gap-2">
@@ -1746,15 +1767,29 @@ export default function Home() {
         </div>
       )}
 
-      {showUserModal && (!currentUser || !currentUser.email) && (
+      {showUserModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white border border-slate-200 rounded-[4px] p-6 max-w-sm w-full shadow-2xl">
-            <div className="flex items-center gap-2 mb-1.5">
-              <Store className="w-5 h-5 text-slate-900" strokeWidth={2} />
-              <h3 className="text-base font-bold text-slate-900">Welcome to Empire Production Hub</h3>
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-2">
+                <Store className="w-5 h-5 text-slate-900" strokeWidth={2} />
+                <h3 className="text-base font-bold text-slate-900">
+                  {currentUser ? "Switch User Profile" : "Welcome to Empire Production Hub"}
+                </h3>
+              </div>
+              {currentUser && (
+                <button
+                  type="button"
+                  onClick={() => setShowUserModal(false)}
+                  className="text-slate-400 hover:text-slate-700 p-1 cursor-pointer transition-colors"
+                  title="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
             <p className="text-xs text-slate-500 mb-4">
-              Enter your Name & Email once. Your stores and history will automatically stay saved to your profile even if you close the tab.
+              Enter your Name & Email. Your stores and history stay automatically saved to your profile.
             </p>
             <form onSubmit={handleSaveUser} className="space-y-3">
               <div>
@@ -1779,9 +1814,14 @@ export default function Home() {
                   className="w-full px-3 py-2 rounded-[4px] border border-slate-300 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-950"
                 />
               </div>
-              <div className="pt-2">
-                <Button type="submit" variant="default" size="sm" className="w-full">
-                  Get Started
+              <div className="pt-2 flex gap-2">
+                {currentUser && (
+                  <Button type="button" variant="outline" size="sm" onClick={() => setShowUserModal(false)} className="flex-1">
+                    Cancel
+                  </Button>
+                )}
+                <Button type="submit" variant="default" size="sm" className="flex-1">
+                  {currentUser ? "Switch Account" : "Get Started"}
                 </Button>
               </div>
             </form>
