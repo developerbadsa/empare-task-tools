@@ -47,32 +47,24 @@ export const INITIAL_DEFAULT_TASKS = [
     ],
   },
   {
-    id: "task-tracking-parcel",
-    title: "5. Tracking & Parcel Panel",
+    id: "task-tracking-parcel-cwill",
+    title: "5. Tracking / Parcel Panel & CWILL",
     isCritical: true,
     completed: false,
     children: [
-      { id: "sub-parcel-panel-config", title: "Parcel Panel configured", completed: false },
-      { id: "sub-tracking-page-live", title: "Tracking Page configured & live", completed: false },
+      { id: "sub-parcel-panel-config", title: "Parcel Panel configured & live", completed: false },
       { id: "sub-shipment-statuses", title: "Custom Shipment Statuses set (3, 6, 9 days)", completed: false },
-      { id: "sub-tracking-url-works", title: "Tracking URL works & manually tested", completed: false },
-    ],
-  },
-  {
-    id: "task-cwill-removal",
-    title: "6. CWILL Removal",
-    isCritical: true,
-    completed: false,
-    children: [
+      { id: "sub-blacklist-keywords", title: "Filter Keywords added to settings", completed: false },
+      { id: "sub-tracking-url-works", title: "Tracking URL tested & working", completed: false },
       { id: "sub-remove-cwill", title: "Remove Powered by CWILL branding", completed: false },
-      { id: "sub-contact-support", title: "Contact support if needed", completed: false },
-      { id: "sub-confirm-store", title: "Correct store confirmed", completed: false },
+      { id: "sub-contact-support", title: "Contacted CWILL live support", completed: false },
+      { id: "sub-confirm-store", title: "Correct store confirmed with support", completed: false },
       { id: "sub-recheck-cwill", title: "Re-check storefront after removal", completed: false },
     ],
   },
   {
     id: "task-product-page",
-    title: "7. Product Page",
+    title: "6. Product Page",
     completed: false,
     children: [
       { id: "sub-payment-logos", title: "Local payment logos placed correctly", completed: false },
@@ -82,7 +74,7 @@ export const INITIAL_DEFAULT_TASKS = [
   },
   {
     id: "task-cookie-banner",
-    title: "8. Cookie Banner",
+    title: "7. Cookie Banner",
     completed: false,
     children: [
       { id: "sub-cookie-remove", title: "Cookie Banner removed", completed: false },
@@ -91,7 +83,7 @@ export const INITIAL_DEFAULT_TASKS = [
   },
   {
     id: "task-collections",
-    title: "9. Collections",
+    title: "8. Collections",
     completed: false,
     children: [
       { id: "sub-collection-tags", title: "Add tag conditions matching Collection names", completed: false },
@@ -99,7 +91,7 @@ export const INITIAL_DEFAULT_TASKS = [
   },
   {
     id: "task-final-qa",
-    title: "10. Final QA & Review",
+    title: "9. Final QA & Review",
     isCritical: true,
     completed: false,
     children: [
