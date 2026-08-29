@@ -797,7 +797,7 @@ export default function Home() {
         <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <Store className="w-5 h-5 text-slate-900" strokeWidth={2} />
-            <h1 className="text-xl font-bold text-slate-900">Store Prompt Toolkit</h1>
+            <h1 className="text-xl font-bold text-slate-900">Empire Production Hub</h1>
           </div>
           {currentUser && (
             <div className="flex items-center gap-2">

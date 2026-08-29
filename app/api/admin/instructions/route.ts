@@ -6,10 +6,8 @@ const DATA_DIR = path.join(process.cwd(), "data");
 const INSTRUCTIONS_FILE = path.join(DATA_DIR, "admin_instructions.json");
 
 export const MASTER_TEAM_INSTRUCTIONS = {
-  title: "PM Notice",
-  text: `• Title, description and image obossoy professional hoite hobe.
-• Jodi kuno store a 60 days thake seyta replace kore 30 days korte hobe.
-• Monday te 'Done' dewua thaka store a login/edit korar dorkar nai.`,
+  title: "Team Guidelines",
+  text: `• Always verify payment methods (e.g., BLIK/Przelewy24 for Poland, MobilePay for Denmark).\n• Never retain Asian/AliExpress reference packaging or watermarks.\n• Use 26px for section headings and 14px for body text.\n• Free shipping across all EU target markets.`,
   isActive: true,
   updatedAt: new Date().toISOString(),
 };

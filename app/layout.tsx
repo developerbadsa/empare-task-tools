@@ -15,8 +15,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Store Prompt Toolkit",
-  description: "Select store, pick template, copy, paste",
+  title: "Empire Production Hub",
+  description: "Shopify Store Setup, Prompts, Tracking & Production SOP Hub",
   icons: {
     icon: "/fav.jpg",
     shortcut: "/fav.jpg",
