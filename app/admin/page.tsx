@@ -235,7 +235,7 @@ export default function AdminPage() {
               href="/"
               className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-900 mb-2 transition-colors"
             >
-              <ArrowLeft className="w-3.5 h-3.5" /> Back to Toolkit
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to Hub
             </Link>
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-6 h-6 text-slate-900" strokeWidth={2} />
@@ -657,25 +657,6 @@ export default function AdminPage() {
                 </span>
               </div>
             </form>
-
-            {/* Live Preview Box */}
-            <div className="bg-emerald-50/80 border border-emerald-300 rounded-[4px] p-5 shadow-2xs">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                  Live Preview (How users will see this green highlighted banner on their screen):
-                </span>
-                <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">
-                  Admin Instruction
-                </span>
-              </div>
-              <h4 className="text-sm font-bold text-emerald-900 mb-1.5">
-                {instructions.title || "Admin Notice"}
-              </h4>
-              <div className="text-xs text-emerald-950 whitespace-pre-wrap leading-relaxed font-sans bg-white/80 border border-emerald-200/90 p-3 rounded-[4px]">
-                {instructions.text || "No instructions written yet."}
-              </div>
-            </div>
           </div>
         )}
       </div>
