@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Store,
   Plus,
@@ -534,15 +534,23 @@ export default function Home() {
     } catch (e) {}
   }
 
-  // 2. Persist store data ONLY after initialized, preventing overwrite bugs
+  const isInitialLoad = useRef(true);
+
+
+  // 2. Persist store data ONLY on user edits, preventing unnecessary initial POST on page load
   useEffect(() => {
     if (!isInitialized || !currentUser) return;
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false;
+      return;
+    }
     try {
       const storageKey = "store_toolkit_data_" + currentUser.email.trim().toLowerCase();
       localStorage.setItem(storageKey, JSON.stringify({ stores, activeId }));
       syncToServer(currentUser.name, currentUser.email, stores, activeId, customPrompts, storeTasks);
     } catch (e) {}
   }, [stores, activeId, customPrompts, storeTasks, currentUser, isInitialized]);
+
 
 
   // 2b. Persist editable presets to localStorage
