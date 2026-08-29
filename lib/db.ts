@@ -226,17 +226,6 @@ export async function getUserData(email: string): Promise<any | null> {
         const { _id, ...rest } = user;
         return rest;
       }
-      // If not yet in MongoDB, check if local seed data exists and import it
-      const fileDb = safeReadJson("user_stores.json", {});
-      if (fileDb[cleanEmail]) {
-        const seed = fileDb[cleanEmail];
-        await db.collection("users").updateOne(
-          { email: cleanEmail },
-          { $set: seed, $setOnInsert: { email: cleanEmail } },
-          { upsert: true }
-        );
-        return seed;
-      }
       return null;
     } catch (e) {
       console.error("[Database] Failed to fetch user from MongoDB:", e);
@@ -317,15 +306,13 @@ export async function getAllUsers(): Promise<any[]> {
   if (db) {
     try {
       const users = await db.collection("users").find({}).sort({ updatedAt: -1 }).toArray();
-      if (users.length > 0) {
-        return users.map((u) => ({
-          name: u.name || "Unnamed",
-          email: u.email || "",
-          stores: u.stores || [],
-          activeId: u.activeId || "",
-          updatedAt: u.updatedAt || "",
-        }));
-      }
+      return users.map((u) => ({
+        name: u.name || "Unnamed",
+        email: u.email || "",
+        stores: u.stores || [],
+        activeId: u.activeId || "",
+        updatedAt: u.updatedAt || "",
+      }));
     } catch (e) {
       console.error("[Database] Failed to fetch users from MongoDB:", e);
     }
@@ -333,8 +320,7 @@ export async function getAllUsers(): Promise<any[]> {
 
   // Fallback to local / memory
   const fileDb = safeReadJson("user_stores.json", {});
-  const merged = { ...fileDb, ...memoryUserDb };
-  return Object.values(merged).map((u: any) => ({
+  return Object.values(fileDb).map((u: any) => ({
     name: u.name || "Unnamed",
     email: u.email || "",
     stores: u.stores || [],
@@ -342,6 +328,7 @@ export async function getAllUsers(): Promise<any[]> {
     updatedAt: u.updatedAt || "",
   }));
 }
+
 
 export async function deleteUser(email: string): Promise<boolean> {
   const cleanEmail = email.trim().toLowerCase();

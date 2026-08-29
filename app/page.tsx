@@ -360,6 +360,7 @@ export default function Home() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<StoreData>({ ...emptyStore });
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Custom prompt overrides per template ID (e.g. { "image-transform": "..." })
   const [customPrompts, setCustomPrompts] = useState<Record<string, string>>({});
@@ -448,56 +449,31 @@ export default function Home() {
     const storageKey = "store_toolkit_data_" + cleanEmail;
     const promptsKey = "store_toolkit_prompts_" + cleanEmail;
     const tasksKey = "store_toolkit_tasks_" + cleanEmail;
-    
-    // First try fast local cache
-    let foundLocal = false;
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (saved) {
-        const d = JSON.parse(saved);
-        if (d.stores && d.stores.length > 0) {
-          const cleanedStores = d.stores.map((s: StoreData) => ({
-            ...s,
-            rememberOptions: s.rememberOptions || [...getDefaultChecked(rememberPresets)],
-          }));
-          setStores(cleanedStores);
-          setActiveId(d.activeId || cleanedStores[0].id);
-          foundLocal = true;
-        }
-      }
-      const savedPrompts = localStorage.getItem(promptsKey);
-      if (savedPrompts) {
-        setCustomPrompts(JSON.parse(savedPrompts));
-      }
-      const savedTasks = localStorage.getItem(tasksKey);
-      if (savedTasks) {
-        const rawMap = JSON.parse(savedTasks);
-        const migratedMap: Record<string, TaskItem[]> = {};
-        Object.keys(rawMap).forEach((k) => {
-          migratedMap[k] = migrateTasks(rawMap[k]);
-        });
-        setStoreTasks(migratedMap);
-      }
-    } catch (e) {}
 
-    // Then sync with server backend database
+    // 1. Server is the Single Source of Truth
     try {
       const res = await fetch("/api/stores?email=" + encodeURIComponent(cleanEmail));
       const data = await res.json();
       if (data.success && data.userData) {
-        if (data.userData.stores && data.userData.stores.length > 0) {
-          const serverStores = data.userData.stores.map((s: StoreData) => ({
-            ...s,
-            rememberOptions: s.rememberOptions || [...getDefaultChecked(rememberPresets)],
-          }));
-          setStores(serverStores);
-          setActiveId(data.userData.activeId || serverStores[0].id);
-          localStorage.setItem(storageKey, JSON.stringify({ stores: serverStores, activeId: data.userData.activeId || serverStores[0].id }));
-        }
+        const serverStores = Array.isArray(data.userData.stores)
+          ? data.userData.stores.map((s: StoreData) => ({
+              ...s,
+              rememberOptions: s.rememberOptions || [...getDefaultChecked(rememberPresets)],
+            }))
+          : [];
+        const nextActiveId = data.userData.activeId || (serverStores[0] ? serverStores[0].id : "");
+
+        setStores(serverStores);
+        setActiveId(nextActiveId);
+        localStorage.setItem(storageKey, JSON.stringify({ stores: serverStores, activeId: nextActiveId }));
+
         if (data.userData.customPrompts) {
           setCustomPrompts(data.userData.customPrompts);
           localStorage.setItem(promptsKey, JSON.stringify(data.userData.customPrompts));
+        } else {
+          setCustomPrompts({});
         }
+
         if (data.userData.tasks) {
           const rawMap = data.userData.tasks;
           const migratedMap: Record<string, TaskItem[]> = {};
@@ -506,18 +482,38 @@ export default function Home() {
           });
           setStoreTasks(migratedMap);
           localStorage.setItem(tasksKey, JSON.stringify(migratedMap));
+        } else {
+          setStoreTasks({});
         }
+
+        setIsInitialized(true);
         return;
       }
     } catch (e) {}
 
-    // If no data exists anywhere yet, initialize with default starting stores for this user
-    if (!foundLocal) {
-      setStores(DEFAULT_STORES);
-      setActiveId(DEFAULT_STORES[0].id);
-      localStorage.setItem(storageKey, JSON.stringify({ stores: DEFAULT_STORES, activeId: DEFAULT_STORES[0].id }));
-      syncToServer(currentUser?.name || "", cleanEmail, DEFAULT_STORES, DEFAULT_STORES[0].id, {}, {});
+    // 2. If user is brand new or offline, check local cache or start fresh
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const d = JSON.parse(saved);
+        const cleanedStores = Array.isArray(d.stores)
+          ? d.stores.map((s: StoreData) => ({
+              ...s,
+              rememberOptions: s.rememberOptions || [...getDefaultChecked(rememberPresets)],
+            }))
+          : [];
+        setStores(cleanedStores);
+        setActiveId(d.activeId || (cleanedStores[0] ? cleanedStores[0].id : ""));
+      } else {
+        setStores([]);
+        setActiveId("");
+        localStorage.setItem(storageKey, JSON.stringify({ stores: [], activeId: "" }));
+      }
+    } catch (e) {
+      setStores([]);
+      setActiveId("");
     }
+    setIsInitialized(true);
   }
 
   function syncToServer(
@@ -545,15 +541,16 @@ export default function Home() {
     } catch (e) {}
   }
 
-  // 2. Persist store data under the user's isolated storage key
+  // 2. Persist store data ONLY after initialized, preventing overwrite bugs
   useEffect(() => {
-    if (!isLoaded || !currentUser) return;
+    if (!isInitialized || !currentUser) return;
     try {
       const storageKey = "store_toolkit_data_" + currentUser.email.trim().toLowerCase();
       localStorage.setItem(storageKey, JSON.stringify({ stores, activeId }));
       syncToServer(currentUser.name, currentUser.email, stores, activeId, customPrompts, storeTasks);
     } catch (e) {}
-  }, [stores, activeId, currentUser, isLoaded]);
+  }, [stores, activeId, customPrompts, storeTasks, currentUser, isInitialized]);
+
 
   // 2b. Persist editable presets to localStorage
   useEffect(() => {
