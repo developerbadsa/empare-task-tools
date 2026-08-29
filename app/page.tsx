@@ -777,18 +777,26 @@ export default function Home() {
       onConfirm: () => {
         const next = stores.filter(function(s) { return s.id !== id; });
         const nextActiveId = activeId === id ? (next[0] ? next[0].id : "") : activeId;
+        const nextTasks = { ...storeTasks };
+        delete nextTasks[id];
+
         setStores(next);
         setActiveId(nextActiveId);
+        setStoreTasks(nextTasks);
+
         if (currentUser) {
           const cleanEmail = currentUser.email.trim().toLowerCase();
           const storageKey = "store_toolkit_data_" + cleanEmail;
+          const tasksKey = "store_toolkit_tasks_" + cleanEmail;
           localStorage.setItem(storageKey, JSON.stringify({ stores: next, activeId: nextActiveId }));
-          syncToServer(currentUser.name, cleanEmail, next, nextActiveId, customPrompts, storeTasks);
+          localStorage.setItem(tasksKey, JSON.stringify(nextTasks));
+          syncToServer(currentUser.name, cleanEmail, next, nextActiveId, customPrompts, nextTasks);
         }
         setConfirmAction(null);
       },
     });
   }
+
 
 
   function editStore(s: StoreData) {

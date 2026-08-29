@@ -255,14 +255,26 @@ export async function saveUserData(data: {
   const cleanEmail = data.email.trim().toLowerCase();
   const db = await getDb();
   const now = new Date().toISOString();
+  const stores = data.stores || [];
+
+  // Prune any orphan tasks belonging to stores that were deleted
+  const validStoreIds = new Set(stores.map((s: any) => s.id));
+  const cleanedTasks: Record<string, any> = {};
+  if (data.tasks) {
+    Object.keys(data.tasks).forEach((k) => {
+      if (validStoreIds.has(k)) {
+        cleanedTasks[k] = data.tasks![k];
+      }
+    });
+  }
 
   const userRecord = {
     email: cleanEmail,
     name: data.name || "",
-    stores: data.stores || [],
-    activeId: data.activeId || "",
+    stores: stores,
+    activeId: data.activeId || (stores[0] ? stores[0].id : ""),
     customPrompts: data.customPrompts || {},
-    tasks: data.tasks || {},
+    tasks: cleanedTasks,
     updatedAt: now,
   };
 
@@ -288,6 +300,7 @@ export async function saveUserData(data: {
       console.error("[Database] Failed to save user to MongoDB:", e);
     }
   }
+
 
   // Fallback to local / memory
   memoryUserDb[cleanEmail] = userRecord;
