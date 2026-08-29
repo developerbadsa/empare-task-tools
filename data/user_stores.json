@@ -118,19 +118,14 @@
           ]
         },
         {
-          "id": "task-tracking-parcel",
-          "title": "5. Tracking & Parcel Panel",
+          "id": "task-tracking-parcel-cwill",
+          "title": "5. Tracking / Parcel Panel & CWILL",
           "isCritical": true,
           "completed": false,
           "children": [
             {
               "id": "sub-parcel-panel-config",
-              "title": "Parcel Panel configured",
-              "completed": false
-            },
-            {
-              "id": "sub-tracking-page-live",
-              "title": "Tracking Page configured and live",
+              "title": "Parcel Panel configured & live",
               "completed": false
             },
             {
@@ -139,18 +134,15 @@
               "completed": false
             },
             {
-              "id": "sub-tracking-url-works",
-              "title": "Tracking URL works and manually tested",
+              "id": "sub-blacklist-keywords",
+              "title": "Filter Keywords added to settings",
               "completed": false
-            }
-          ]
-        },
-        {
-          "id": "task-cwill-removal",
-          "title": "6. CWILL Removal",
-          "isCritical": true,
-          "completed": true,
-          "children": [
+            },
+            {
+              "id": "sub-tracking-url-works",
+              "title": "Tracking URL tested & working",
+              "completed": false
+            },
             {
               "id": "sub-remove-cwill",
               "title": "Remove Powered by CWILL branding",
@@ -158,12 +150,12 @@
             },
             {
               "id": "sub-contact-support",
-              "title": "Contact support if needed",
+              "title": "Contacted CWILL live support",
               "completed": true
             },
             {
               "id": "sub-confirm-store",
-              "title": "Correct store confirmed",
+              "title": "Correct store confirmed with support",
               "completed": true
             },
             {
@@ -175,7 +167,7 @@
         },
         {
           "id": "task-product-page",
-          "title": "7. Product Page",
+          "title": "6. Product Page",
           "completed": false,
           "children": [
             {
@@ -197,7 +189,7 @@
         },
         {
           "id": "task-cookie-banner",
-          "title": "8. Cookie Banner",
+          "title": "7. Cookie Banner",
           "completed": false,
           "children": [
             {
@@ -214,7 +206,7 @@
         },
         {
           "id": "task-collections",
-          "title": "9. Collections",
+          "title": "8. Collections",
           "completed": false,
           "children": [
             {
@@ -226,7 +218,7 @@
         },
         {
           "id": "task-final-qa",
-          "title": "10. Final QA & Review",
+          "title": "9. Final QA & Review",
           "isCritical": true,
           "completed": false,
           "children": [

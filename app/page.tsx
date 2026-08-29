@@ -462,7 +462,12 @@ export default function Home() {
       }
       const savedTasks = localStorage.getItem(tasksKey);
       if (savedTasks) {
-        setStoreTasks(JSON.parse(savedTasks));
+        const rawMap = JSON.parse(savedTasks);
+        const migratedMap: Record<string, TaskItem[]> = {};
+        Object.keys(rawMap).forEach((k) => {
+          migratedMap[k] = migrateTasks(rawMap[k]);
+        });
+        setStoreTasks(migratedMap);
       }
     } catch (e) {}
 
@@ -485,8 +490,13 @@ export default function Home() {
           localStorage.setItem(promptsKey, JSON.stringify(data.userData.customPrompts));
         }
         if (data.userData.tasks) {
-          setStoreTasks(data.userData.tasks);
-          localStorage.setItem(tasksKey, JSON.stringify(data.userData.tasks));
+          const rawMap = data.userData.tasks;
+          const migratedMap: Record<string, TaskItem[]> = {};
+          Object.keys(rawMap).forEach((k) => {
+            migratedMap[k] = migrateTasks(rawMap[k]);
+          });
+          setStoreTasks(migratedMap);
+          localStorage.setItem(tasksKey, JSON.stringify(migratedMap));
         }
         return;
       }
@@ -603,10 +613,47 @@ export default function Home() {
     };
   });
 
+  function migrateTasks(tasks: TaskItem[]): TaskItem[] {
+    if (!Array.isArray(tasks)) return DEFAULT_STORE_TASKS;
+    const hasOldTasks = tasks.some((t) => t.id === "task-tracking-parcel" || t.id === "task-cwill-removal");
+    if (!hasOldTasks) return tasks;
+
+    const oldTracking = tasks.find((t) => t.id === "task-tracking-parcel");
+    const oldCwill = tasks.find((t) => t.id === "task-cwill-removal");
+    const subMap: Record<string, boolean> = {};
+    if (oldTracking?.children) {
+      oldTracking.children.forEach((c) => { subMap[c.id] = c.completed; });
+    }
+    if (oldCwill?.children) {
+      oldCwill.children.forEach((c) => { subMap[c.id] = c.completed; });
+    }
+
+    return DEFAULT_STORE_TASKS.map((defTask) => {
+      const existing = tasks.find((t) => t.id === defTask.id);
+      if (defTask.id === "task-tracking-parcel-cwill") {
+        const mergedChildren = defTask.children?.map((c) => ({
+          ...c,
+          completed: Boolean(subMap[c.id]),
+        }));
+        const allDone = mergedChildren ? mergedChildren.every((c) => c.completed) : false;
+        return {
+          ...defTask,
+          completed: allDone,
+          children: mergedChildren,
+        };
+      }
+      if (existing) {
+        return existing;
+      }
+      return defTask;
+    });
+  }
+
   // Task Checklist Helpers
   function getActiveTasks(): TaskItem[] {
     if (!activeId) return DEFAULT_STORE_TASKS;
-    return storeTasks[activeId] || DEFAULT_STORE_TASKS;
+    const raw = storeTasks[activeId] || DEFAULT_STORE_TASKS;
+    return migrateTasks(raw);
   }
 
   function saveActiveTasks(updatedTasks: TaskItem[]) {
