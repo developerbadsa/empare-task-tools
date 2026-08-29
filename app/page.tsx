@@ -233,13 +233,15 @@ const DEFAULT_RAW_TEMPLATES = [
     id: "image-transform",
     title: "Image Transform",
     rawText:
-      "Act as an expert e-commerce visual director. Transform the attached reference image into a new photorealistic, high-end commercial photo for **{STORE_NAME}** ({COUNTRY}).\n\n" +
-      "MANDATORY STRICT RULES:\n" +
-      "1. COMPLETE BRAND REMOVAL: Detect and 100% remove all reference logos, brand names, watermarks, tags, Asian/Chinese text, and promotional labels. Replace with clean unbranded or {STORE_NAME} styling.\n" +
-      "2. NATURAL DEMOGRAPHIC: Completely replace the person in the reference with a new natural-looking model native to **{COUNTRY}** (matching realistic European/Scandinavian facial features, natural skin tone, hair styling, eye color, and cultural fashion).\n" +
-      "3. AUTHENTIC ENVIRONMENT: Replace the background with an authentic, modern setting matching **{COUNTRY}** (clean minimalist Scandinavian interior or exterior, warm natural lighting, summer ambiance if seasonal).\n" +
-      "4. PRODUCT & FIDELITY: Keep the exact product shape, composition, camera angle, pose, framing, and true-to-life texture unchanged.\n" +
-      "5. ZERO UNWANTED TEXT / NO CGI: Do NOT invent or add any random floating text, badges, or CGI artifacts. Keep output 100% photorealistic, crisp, and studio-grade.",
+      "Act as an expert e-commerce visual director. Your objective is to transform the attached reference image into a new photorealistic, high-end commercial photo for **{STORE_NAME}** ({COUNTRY}).\n\n" +
+      "MANDATORY STRICT RULES:\n\n" +
+      "COMPLETE BRAND REMOVAL: Detect and 100% remove all reference logos, brand names, watermarks, tags, Asian/Chinese text, and promotional labels. Replace with clean unbranded surfaces or {STORE_NAME} styling where necessary.\n\n" +
+      "MODEL PRESENCE & DEMOGRAPHIC (STRONG CONDITIONAL RULE): First, analyze the original reference image to see if any people (models or characters) are present.\n\n" +
+      "IF PEOPLE ARE PRESENT: You must completely replace them with new, natural-looking models native to **{COUNTRY}** (matching realistic European/Scandinavian facial features, natural skin tone, hair styling, eye color, and cultural fashion).\n\n" +
+      "IF NO PEOPLE ARE PRESENT: You absolutely must not add any new models or characters to the scene. The scene should remain unpopulated.\n\n" +
+      "AUTHENTIC ENVIRONMENT: Replace the background with an authentic, modern setting matching **{COUNTRY}** (e.g., a clean minimalist Scandinavian-influenced interior or exterior, warm natural lighting, with a summer ambiance if applicable).\n\n" +
+      "PRODUCT & FIDELITY: Keep the exact product shape, composition, camera angle, pose (of objects or products), framing, and true-to-life texture of all core products and foreground elements unchanged.\n\n" +
+      "ZERO UNWANTED TEXT / NO CGI: Do NOT invent or add any random floating text, badges, or CGI artifacts. Keep output 100% photorealistic, crisp, and studio-grade.",
   },
   {
     id: "logo-generator",
