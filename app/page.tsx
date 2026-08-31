@@ -18,8 +18,13 @@ import {
   ExternalLink,
   Settings,
   X,
+  Sparkles,
+  Clock,
+  FileText,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { autoFillStore, getSupportedCountries } from "@/lib/autoFill";
 
 interface UserProfile {
   name: string;
@@ -30,6 +35,7 @@ export interface TaskSubItem {
   id: string;
   title: string;
   completed: boolean;
+  completedAt?: string;
 }
 
 export interface TaskItem {
@@ -38,11 +44,13 @@ export interface TaskItem {
   isCritical?: boolean;
   completed: boolean;
   children?: TaskSubItem[];
+  stageNote?: string;
 }
 
 export interface StoreData {
   id: string;
   name: string;
+  logoText: string;
   company: string;
   address: string;
   email: string;
@@ -62,69 +70,122 @@ const DEFAULT_STORE_TASKS: TaskItem[] = [
     completed: false,
     children: [
       { id: "sub-theme-impulse", title: "Impulse Theme configured", completed: false },
-      { id: "sub-logo-name", title: "Logo and Store Name updated", completed: false },
-      { id: "sub-favicon", title: "Favicon uploaded and verified", completed: false },
+      { id: "sub-logo-name", title: "Logo + Store Name updated", completed: false },
+      { id: "sub-favicon", title: "Favicon uploaded & verified", completed: false },
       { id: "sub-brand-colors", title: "Brand Colors set", completed: false },
+      { id: "sub-logo-reference", title: "Logo as per reference", completed: false },
+    ],
+  },
+  {
+    id: "task-seo",
+    title: "2. SEO",
+    completed: false,
+    children: [
+      { id: "sub-seo-meta-title", title: "Meta Title set", completed: false },
+      { id: "sub-seo-meta-desc", title: "Meta Description set", completed: false },
+      { id: "sub-seo-social-image", title: "SEO / Social Sharing Image uploaded", completed: false },
     ],
   },
   {
     id: "task-checkout",
-    title: "2. Checkout",
+    title: "3. Checkout",
     completed: false,
     children: [
       { id: "sub-checkout-logo", title: "Checkout Logo placed", completed: false },
-      { id: "sub-checkout-color", title: "Checkout Brand Accent Color matched", completed: false },
-      { id: "sub-checkout-title", title: "Checkout Title and Branding verified", completed: false },
+      { id: "sub-checkout-color", title: "Checkout Brand Color matched", completed: false },
+      { id: "sub-checkout-title", title: "Checkout Title & Branding verified", completed: false },
     ],
   },
   {
     id: "task-pages",
-    title: "3. Pages",
+    title: "4. Pages",
     completed: false,
     children: [
       { id: "sub-pages-translation", title: "Natural local-language translation", completed: false },
-      { id: "sub-pages-credentials", title: "Company, Contact, and Address aligned", completed: false },
+      { id: "sub-pages-credentials", title: "Correct Company / Contact / Address aligned", completed: false },
+      { id: "sub-pages-contact-all", title: "All pages have Contact Information", completed: false },
+      { id: "sub-pages-business-info", title: "Our Business Information is correct", completed: false },
       { id: "sub-pages-no-insta", title: "No unnecessary Instagram repetition", completed: false },
     ],
   },
   {
-    id: "task-shipping",
-    title: "4. Shipping",
+    id: "task-collections",
+    title: "5. Collections",
     completed: false,
     children: [
-      { id: "sub-shipping-free", title: "Free Express Shipping translated to local language", completed: false },
-      { id: "sub-shipping-consistent", title: "Store-wide free shipping consistency verified", completed: false },
+      { id: "sub-collections-only-main", title: "Only Main Collections present", completed: false },
+      { id: "sub-collections-tags", title: "Tags / conditions added for Collections", completed: false },
+      { id: "sub-collections-no-subcat", title: "No sub-category / sub-menu added", completed: false },
+      { id: "sub-collections-no-footer-extra", title: "No extra collection in footer", completed: false },
     ],
   },
   {
-    id: "task-tracking-parcel-cwill",
-    title: "5. Tracking / Parcel Panel & CWILL",
-    isCritical: true,
+    id: "task-discounts",
+    title: "6. Discounts",
     completed: false,
     children: [
-      { id: "sub-parcel-panel-config", title: "Parcel Panel configured & live", completed: false },
-      { id: "sub-shipment-statuses", title: "Custom Shipment Statuses set (3, 6, 9 days)", completed: false },
-      { id: "sub-blacklist-keywords", title: "Filter Keywords added to settings", completed: false },
-      { id: "sub-tracking-url-works", title: "Tracking URL tested & working", completed: false },
-      { id: "sub-remove-cwill", title: "Remove Powered by CWILL branding", completed: false },
-      { id: "sub-contact-support", title: "Contacted CWILL live support", completed: false },
-      { id: "sub-confirm-store", title: "Correct store confirmed with support", completed: false },
-      { id: "sub-recheck-cwill", title: "Re-check storefront after removal", completed: false },
+      { id: "sub-discount-10", title: "10% Discount created", completed: false },
+      { id: "sub-discount-15", title: "15% Discount created", completed: false },
+      { id: "sub-discount-20", title: "20% Discount created", completed: false },
     ],
   },
   {
     id: "task-product-page",
-    title: "6. Product Page",
+    title: "7. Product Page",
     completed: false,
     children: [
-      { id: "sub-payment-logos", title: "Local payment logos placed correctly", completed: false },
-      { id: "sub-clean-alignment", title: "Clean alignment and minimal layout", completed: false },
-      { id: "sub-do-not-remove", title: "Do not remove elements without instruction", completed: false },
+      { id: "sub-product-swatch", title: "Image Swatch below color", completed: false },
+      { id: "sub-product-swatch-king", title: "Swatch King app installed & configured", completed: false },
+      { id: "sub-product-payment-logos", title: "Payment logos in one line", completed: false },
+      { id: "sub-product-cart-blocks", title: "Cart button blocks match reference", completed: false },
+      { id: "sub-product-no-remove", title: "Nothing removed without instruction", completed: false },
+    ],
+  },
+  {
+    id: "task-cart-drawer",
+    title: "8. Cart Drawer",
+    completed: false,
+    children: [
+      { id: "sub-cart-drawer-ref", title: "Cart Drawer same as reference", completed: false },
+    ],
+  },
+  {
+    id: "task-shipping",
+    title: "9. Shipping",
+    completed: false,
+    children: [
+      { id: "sub-shipping-free", title: "Free Express Shipping in local language", completed: false },
+      { id: "sub-shipping-consistent", title: "Store-wide consistency verified", completed: false },
+    ],
+  },
+  {
+    id: "task-tracking-parcel-panel",
+    title: "10. Tracking / Parcel Panel",
+    isCritical: true,
+    completed: false,
+    children: [
+      { id: "sub-parcel-panel-config", title: "Parcel Panel configured", completed: false },
+      { id: "sub-tracking-page-config", title: "Tracking Page configured", completed: false },
+      { id: "sub-tracking-exact-docs", title: "100% exact as per docs", completed: false },
+      { id: "sub-shipment-statuses", title: "Custom Shipment Statuses set", completed: false },
+      { id: "sub-tracking-url-works", title: "Tracking URL works", completed: false },
+      { id: "sub-tracking-manual-test", title: "Manually test tracking", completed: false },
+    ],
+  },
+  {
+    id: "task-cwill",
+    title: "11. CWILL",
+    isCritical: true,
+    completed: false,
+    children: [
+      { id: "sub-remove-cwill", title: "Remove 'Powered by CWILL'", completed: false },
+      { id: "sub-cwill-confirm-store", title: "Correct store confirmed", completed: false },
+      { id: "sub-cwill-recheck", title: "Re-check after removal", completed: false },
     ],
   },
   {
     id: "task-cookie-banner",
-    title: "7. Cookie Banner",
+    title: "12. Cookie",
     completed: false,
     children: [
       { id: "sub-cookie-remove", title: "Cookie Banner removed", completed: false },
@@ -132,21 +193,27 @@ const DEFAULT_STORE_TASKS: TaskItem[] = [
     ],
   },
   {
-    id: "task-collections",
-    title: "8. Collections",
-    completed: false,
-    children: [
-      { id: "sub-collection-tags", title: "Add tag conditions matching Collection names", completed: false },
-    ],
-  },
-  {
     id: "task-final-qa",
-    title: "9. Final QA & Review",
+    title: "13. Final QA & Review",
     isCritical: true,
     completed: false,
     children: [
-      { id: "sub-sequential-check", title: "Sequential check: Theme, Checkout, Pages, Shipping, Tracking, CWILL, Payment Logos, Cookie", completed: false },
-      { id: "sub-final-test-order", title: "Perform final live test checkout order", completed: false },
+      { id: "sub-qa-theme", title: "Theme", completed: false },
+      { id: "sub-qa-seo", title: "SEO", completed: false },
+      { id: "sub-qa-checkout", title: "Checkout", completed: false },
+      { id: "sub-qa-pages", title: "Pages", completed: false },
+      { id: "sub-qa-collections", title: "Collections", completed: false },
+      { id: "sub-qa-discounts", title: "Discounts", completed: false },
+      { id: "sub-qa-shipping", title: "Shipping", completed: false },
+      { id: "sub-qa-product-page", title: "Product Page", completed: false },
+      { id: "sub-qa-payment-logos", title: "Payment Logos", completed: false },
+      { id: "sub-qa-cart-drawer", title: "Cart Drawer", completed: false },
+      { id: "sub-qa-parcel-panel", title: "Parcel Panel", completed: false },
+      { id: "sub-qa-tracking", title: "Tracking", completed: false },
+      { id: "sub-qa-cwill", title: "CWILL", completed: false },
+      { id: "sub-qa-cookie", title: "Cookie", completed: false },
+      { id: "sub-qa-contact-info", title: "Contact Info", completed: false },
+      { id: "sub-final-test-order", title: "Final Live Test / Checkout Order", completed: false },
     ],
   },
 ];
@@ -165,6 +232,7 @@ const getDefaultChecked = (presets: { label: string; defaultChecked: boolean }[]
 const emptyStore: StoreData = {
   id: "",
   name: "",
+  logoText: "",
   company: "",
   address: "",
   email: "",
@@ -181,6 +249,7 @@ const DEFAULT_STORES: StoreData[] = [
   {
     id: "poland-luminari",
     name: "Luminari",
+    logoText: "Luminari",
     company: "Luminari sp. z o.o.",
     address: "ul. Chorzowska 107, 40-101 Katowice, Polska",
     email: "pomoc@luminarikatowice.com",
@@ -199,6 +268,7 @@ const DEFAULT_STORES: StoreData[] = [
   {
     id: "denmark-luminari",
     name: "Luminari",
+    logoText: "Luminari",
     company: "Luminari ApS",
     address: "Østergade 12, 1100 København K, Danmark",
     email: "support@luminari.dk",
@@ -218,6 +288,7 @@ const DEFAULT_STORES: StoreData[] = [
 
 const DYNAMIC_TAGS = [
   { tag: "{STORE_NAME}", label: "Store Name", desc: "e.g. Luminari" },
+  { tag: "{LOGO_TEXT}", label: "Logo Text", desc: "e.g. Luminari" },
   { tag: "{COUNTRY}", label: "Country", desc: "e.g. Poland" },
   { tag: "{COMPANY}", label: "Company", desc: "e.g. Luminari sp. z o.o." },
   { tag: "{DOMAIN}", label: "Domain", desc: "e.g. luminarikatowice.com" },
@@ -339,6 +410,7 @@ function renderTemplate(rawText: string, st: StoreData | null): string {
 
   return rawText
     .replace(/\{STORE_NAME\}/g, st.name || "")
+    .replace(/\{LOGO_TEXT\}/g, st.logoText || st.name || "")
     .replace(/\{COUNTRY\}/g, st.country || "")
     .replace(/\{COMPANY\}/g, st.company || "")
     .replace(/\{DOMAIN\}/g, st.domain || "")
@@ -372,6 +444,20 @@ export default function Home() {
   const [storeTasks, setStoreTasks] = useState<Record<string, TaskItem[]>>({});
   const [collapsedTasks, setCollapsedTasks] = useState<Record<string, boolean>>({});
   const [newTaskInput, setNewTaskInput] = useState("");
+
+  // Auto-Fill Engine State
+  const [autoFillSources, setAutoFillSources] = useState<string[]>([]);
+  const [autoFillMsg, setAutoFillMsg] = useState("");
+  const autoFillTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Export State
+  const [exportMsg, setExportMsg] = useState("");
+
+  // Country Quick Panel
+  const [showCountryPanel, setShowCountryPanel] = useState(false);
+
+  // Stage Notes
+  const [editingNoteTaskId, setEditingNoteTaskId] = useState<string | null>(null);
 
   // Admin Global Instructions
   const [adminInstructions, setAdminInstructions] = useState<{
@@ -686,22 +772,33 @@ export default function Home() {
 
   function migrateTasks(tasks: TaskItem[]): TaskItem[] {
     if (!Array.isArray(tasks)) return DEFAULT_STORE_TASKS;
-    const hasOldTasks = tasks.some((t) => t.id === "task-tracking-parcel" || t.id === "task-cwill-removal");
-    if (!hasOldTasks) return tasks;
 
-    const oldTracking = tasks.find((t) => t.id === "task-tracking-parcel");
-    const oldCwill = tasks.find((t) => t.id === "task-cwill-removal");
+    // Detect old v1 structure (separate tracking + cwill)
+    const hasV1 = tasks.some((t) => t.id === "task-tracking-parcel" || t.id === "task-cwill-removal");
+    // Detect old v2 structure (combined tracking-parcel-cwill)
+    const hasV2 = tasks.some((t) => t.id === "task-tracking-parcel-cwill");
+
+    if (!hasV1 && !hasV2) return tasks;
+
+    // Build sub-task completion map from old structure
     const subMap: Record<string, boolean> = {};
-    if (oldTracking?.children) {
-      oldTracking.children.forEach((c) => { subMap[c.id] = c.completed; });
-    }
-    if (oldCwill?.children) {
-      oldCwill.children.forEach((c) => { subMap[c.id] = c.completed; });
+    for (const t of tasks) {
+      if (t.id === "task-tracking-parcel" || t.id === "task-cwill-removal" || t.id === "task-tracking-parcel-cwill") {
+        if (t.children) {
+          t.children.forEach((c) => { subMap[c.id] = c.completed; });
+        }
+      }
+      // Also migrate subtask completion from any matching category
+      if (t.children) {
+        t.children.forEach((c) => { subMap[c.id] = c.completed; });
+      }
     }
 
     return DEFAULT_STORE_TASKS.map((defTask) => {
       const existing = tasks.find((t) => t.id === defTask.id);
-      if (defTask.id === "task-tracking-parcel-cwill") {
+
+      // Migrate old combined tracking+cwill into new split tasks
+      if (defTask.id === "task-tracking-parcel-panel" || defTask.id === "task-cwill") {
         const mergedChildren = defTask.children?.map((c) => ({
           ...c,
           completed: Boolean(subMap[c.id]),
@@ -713,9 +810,23 @@ export default function Home() {
           children: mergedChildren,
         };
       }
+
       if (existing) {
+        // Merge existing subtask completions into new default children
+        if (existing.children && defTask.children) {
+          const existingSubMap: Record<string, boolean> = {};
+          existing.children.forEach((c) => { existingSubMap[c.id] = c.completed; });
+          const mergedChildren = defTask.children.map((c) => ({
+            ...c,
+            completed: existingSubMap[c.id] !== undefined ? existingSubMap[c.id] : Boolean(subMap[c.id]),
+          }));
+          const allDone = mergedChildren.every((c) => c.completed);
+          return { ...defTask, completed: allDone, children: mergedChildren };
+        }
         return existing;
       }
+
+      // New category not present in old data — use fresh default
       return defTask;
     });
   }
@@ -753,13 +864,84 @@ export default function Home() {
     const current = getActiveTasks();
     const updated = current.map((t) => {
       if (t.id === parentId && t.children) {
-        const nextChildren = t.children.map((c) => (c.id === subId ? { ...c, completed: !c.completed } : c));
+        const nextChildren = t.children.map((c) => {
+          if (c.id === subId) {
+            const newCompleted = !c.completed;
+            return { ...c, completed: newCompleted, completedAt: newCompleted ? new Date().toISOString() : undefined };
+          }
+          return c;
+        });
         const allCompleted = nextChildren.every((c) => c.completed);
         return { ...t, completed: allCompleted, children: nextChildren };
       }
       return t;
     });
     saveActiveTasks(updated);
+  }
+
+  // Mark all subtasks in a category as done/undone
+  function toggleMarkAllDone(taskId: string) {
+    const current = getActiveTasks();
+    const task = current.find((t) => t.id === taskId);
+    if (!task || !task.children) return;
+    const allDone = task.children.every((c) => c.completed);
+    const now = new Date().toISOString();
+    const updated = current.map((t) => {
+      if (t.id === taskId && t.children) {
+        const nextChildren = t.children.map((c) => ({
+          ...c,
+          completed: !allDone,
+          completedAt: !allDone ? now : undefined,
+        }));
+        return { ...t, completed: !allDone, children: nextChildren };
+      }
+      return t;
+    });
+    saveActiveTasks(updated);
+  }
+
+  // Save a note for a stage
+  function saveStageNote(taskId: string, note: string) {
+    const current = getActiveTasks();
+    const updated = current.map((t) => (t.id === taskId ? { ...t, stageNote: note } : t));
+    saveActiveTasks(updated);
+  }
+
+  // Export checklist as formatted report
+  function exportChecklistReport() {
+    if (!active) return;
+    const tasks = getActiveTasks();
+    const prog = calculateProgress(tasks);
+    const now = new Date().toLocaleString();
+    let report = ``;
+    report += `\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n`;
+    report += `\u2500 STORE CHECKLIST REPORT \u2500\n`;
+    report += `\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n`;
+    report += `Store: ${active.name} (${active.country})\n`;
+    report += `Domain: ${active.domain}\n`;
+    report += `Company: ${active.company}\n`;
+    report += `Generated: ${now}\n`;
+    report += `Progress: ${prog.completed}/${prog.total} (${prog.percent}%)\n`;
+    report += `\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\n`;
+    tasks.forEach((t, i) => {
+      const totalSubs = t.children ? t.children.length : 1;
+      const doneSubs = t.children ? t.children.filter((c) => c.completed).length : t.completed ? 1 : 0;
+      const icon = doneSubs === totalSubs ? '\u2705' : doneSubs > 0 ? '\u23F3' : '\u2B1C';
+      report += `${icon} ${t.title} [${doneSubs}/${totalSubs}]${t.isCritical ? ' \u{1F534}' : ''}\n`;
+      if (t.children) {
+        t.children.forEach((c) => {
+          report += `   ${c.completed ? '\u2705' : '\u2B1C'} ${c.title}`;
+          if (c.completedAt) report += ` (${new Date(c.completedAt).toLocaleDateString()})`;
+          report += `\n`;
+        });
+      }
+      if (t.stageNote) report += `   \u{1F4DD} Note: ${t.stageNote}\n`;
+      report += `\n`;
+    });
+    report += `\u2500\u2500\u2500\u2500 END REPORT \u2500\u2500\u2500\u2500\n`;
+    navigator.clipboard.writeText(report);
+    setExportMsg('Report copied! Paste in PM chat.');
+    setTimeout(() => setExportMsg(''), 3000);
   }
 
   function calculateProgress(tasks: TaskItem[]) {
@@ -782,6 +964,53 @@ export default function Home() {
 
   function toggleCollapseTask(taskId: string) {
     setCollapsedTasks((prev) => ({ ...prev, [taskId]: !prev[taskId] }));
+  }
+
+  // ─── Auto-Fill Engine ────────────────────────────────────────────
+  function runAutoDetect(currentForm: StoreData) {
+    const result = autoFillStore({
+      name: currentForm.name,
+      logoText: currentForm.logoText,
+      company: currentForm.company,
+      address: currentForm.address,
+      email: currentForm.email,
+      domain: currentForm.domain,
+      country: currentForm.country,
+      language: currentForm.language,
+      currency: currentForm.currency,
+    });
+
+    if (result.sources.length === 0) return;
+
+    // Merge filled + suggestions into form
+    const updates: Partial<StoreData> = {};
+    if (result.filled.country && !currentForm.country) updates.country = result.filled.country;
+    if (result.filled.language && !currentForm.language) updates.language = result.filled.language;
+    if (result.filled.currency && !currentForm.currency) updates.currency = result.filled.currency;
+    if (result.filled.hours && currentForm.hours === emptyStore.hours) updates.hours = result.filled.hours;
+    if (result.suggestions.company && !currentForm.company) updates.company = result.suggestions.company;
+
+    if (Object.keys(updates).length > 0) {
+      setForm((prev) => ({ ...prev, ...updates }));
+      setAutoFillSources(result.sources);
+      setAutoFillMsg(`Auto-detected from: ${result.sources.join(', ')}`);
+      setTimeout(() => setAutoFillMsg(''), 5000);
+    }
+  }
+
+  // Debounced auto-fill trigger on form change
+  function handleFormChange(key: string, value: string) {
+    setForm((prev) => {
+      const next = { ...prev, [key]: value };
+      // Debounce auto-detect by 600ms
+      if (autoFillTimerRef.current) clearTimeout(autoFillTimerRef.current);
+      autoFillTimerRef.current = setTimeout(() => runAutoDetect(next), 600);
+      return next;
+    });
+  }
+
+  function handleManualAutoFill() {
+    runAutoDetect(form);
   }
 
   function handleAddCustomTask(e: React.FormEvent) {
@@ -912,6 +1141,7 @@ export default function Home() {
 
   var fields = [
     { key: "name", label: "Store Name", r: true, placeholder: "e.g. Luminari" },
+    { key: "logoText", label: "Logo Text", r: true, placeholder: "e.g. Luminari (appears on logo & branding)" },
     { key: "company", label: "Company", r: true, placeholder: "e.g. Luminari sp. z o.o." },
     { key: "address", label: "Address", placeholder: "e.g. ul. Chorzowska 107, 40-101 Katowice, Polska" },
     { key: "email", label: "Email", placeholder: "e.g. pomoc@luminarikatowice.com" },
@@ -1035,6 +1265,7 @@ export default function Home() {
           <div className="bg-white border border-slate-200 rounded-[4px] p-4 mb-4">
             <div className="flex items-center gap-3 text-sm text-slate-600 flex-wrap">
               <span className="font-semibold text-slate-900">{active.name}</span>
+              {active.logoText && <span className="px-2 py-0.5 rounded-[4px] bg-sky-50 text-sky-700 text-xs font-medium border border-sky-200">Logo: {active.logoText}</span>}
               <span className="px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-700 text-xs font-medium">{active.country}</span>
               <span className="text-slate-300">|</span> <span>{active.company}</span>
               <span className="text-slate-300">|</span> <span>{active.domain}</span>
@@ -1063,9 +1294,31 @@ export default function Home() {
         {/* Store Form (Add / Edit Store) */}
         {showForm && (
           <div className="bg-white border border-slate-200 rounded-[4px] p-6 shadow-sm mb-6">
-            <h3 className="text-base font-bold text-slate-900 mb-4">{form.id ? "Edit Store" : "Add New Store"}</h3>
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+              <h3 className="text-base font-bold text-slate-900">{form.id ? "Edit Store" : "Add New Store"}</h3>
+              <div className="flex items-center gap-2">
+                {autoFillMsg && (
+                  <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-[4px] flex items-center gap-1 animate-pulse">
+                    <Sparkles className="w-3 h-3" /> {autoFillMsg}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={handleManualAutoFill}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-sky-700 bg-sky-50 hover:bg-sky-100 border border-sky-200 rounded-[4px] transition-colors cursor-pointer"
+                  title="Auto-detect fields from what you've typed"
+                >
+                  <Sparkles className="w-3.5 h-3.5" /> Auto-Detect
+                </button>
+              </div>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {fields.map(function(f) {
+                const isAutoFilled = autoFillSources.length > 0 && (
+                  (f.key === 'country' && form.country && !form.id) ||
+                  (f.key === 'language' && form.language && !form.id) ||
+                  (f.key === 'currency' && form.currency && !form.id)
+                );
                 return (
                   <div key={f.key}>
                     <label className="block text-xs font-medium text-slate-500 mb-1">
@@ -1074,9 +1327,9 @@ export default function Home() {
                     <input
                       type="text"
                       value={(form as any)[f.key] || ""}
-                      onChange={function(e) { setForm({ ...form, [f.key]: e.target.value }); }}
+                      onChange={function(e) { handleFormChange(f.key, e.target.value); }}
                       placeholder={f.placeholder}
-                      className="w-full px-3 py-2 rounded-[4px] border border-slate-300 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-950"
+                      className={`w-full px-3 py-2 rounded-[4px] border text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-950 ${isAutoFilled ? 'border-emerald-300 bg-emerald-50/50' : 'border-slate-300'}`}
                     />
                   </div>
                 );
@@ -1386,7 +1639,7 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* 4. Verification Checklist (Synced with Stage 5) */}
+                  {/* 4. Verification Checklist (Synced with Tasks 10 & 11) */}
                   <div className="pt-2 border-t border-slate-100 space-y-2">
                     <span className="text-xs font-bold text-slate-800 uppercase tracking-wide block">
                       4. Verification Checklist (Did you complete these?)
@@ -1396,11 +1649,23 @@ export default function Home() {
                         <input
                           type="checkbox"
                           checked={Boolean(activeSubTaskMap["sub-parcel-panel-config"])}
-                          onChange={() => toggleSubTask("task-tracking-parcel-cwill", "sub-parcel-panel-config")}
+                          onChange={() => toggleSubTask("task-tracking-parcel-panel", "sub-parcel-panel-config")}
                           className="w-4 h-4 accent-slate-900 rounded-[2px] cursor-pointer"
                         />
                         <span className={activeSubTaskMap["sub-parcel-panel-config"] ? "line-through text-slate-400" : "font-medium"}>
-                          Parcel Panel configured & live
+                          Parcel Panel configured
+                        </span>
+                      </label>
+
+                      <label className="flex items-center gap-2 text-xs text-slate-800 cursor-pointer select-none bg-slate-50 p-2.5 rounded-[4px] border border-slate-200 hover:border-slate-300 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(activeSubTaskMap["sub-tracking-page-config"])}
+                          onChange={() => toggleSubTask("task-tracking-parcel-panel", "sub-tracking-page-config")}
+                          className="w-4 h-4 accent-slate-900 rounded-[2px] cursor-pointer"
+                        />
+                        <span className={activeSubTaskMap["sub-tracking-page-config"] ? "line-through text-slate-400" : "font-medium"}>
+                          Tracking Page configured
                         </span>
                       </label>
 
@@ -1408,23 +1673,11 @@ export default function Home() {
                         <input
                           type="checkbox"
                           checked={Boolean(activeSubTaskMap["sub-shipment-statuses"])}
-                          onChange={() => toggleSubTask("task-tracking-parcel-cwill", "sub-shipment-statuses")}
+                          onChange={() => toggleSubTask("task-tracking-parcel-panel", "sub-shipment-statuses")}
                           className="w-4 h-4 accent-slate-900 rounded-[2px] cursor-pointer"
                         />
                         <span className={activeSubTaskMap["sub-shipment-statuses"] ? "line-through text-slate-400" : "font-medium"}>
-                          Added 3 Custom Statuses (3, 6, 9 days)
-                        </span>
-                      </label>
-
-                      <label className="flex items-center gap-2 text-xs text-slate-800 cursor-pointer select-none bg-slate-50 p-2.5 rounded-[4px] border border-slate-200 hover:border-slate-300 transition-colors">
-                        <input
-                          type="checkbox"
-                          checked={Boolean(activeSubTaskMap["sub-blacklist-keywords"])}
-                          onChange={() => toggleSubTask("task-tracking-parcel-cwill", "sub-blacklist-keywords")}
-                          className="w-4 h-4 accent-slate-900 rounded-[2px] cursor-pointer"
-                        />
-                        <span className={activeSubTaskMap["sub-blacklist-keywords"] ? "line-through text-slate-400" : "font-medium"}>
-                          Added Filter Keywords to settings
+                          Custom Shipment Statuses set
                         </span>
                       </label>
 
@@ -1432,11 +1685,23 @@ export default function Home() {
                         <input
                           type="checkbox"
                           checked={Boolean(activeSubTaskMap["sub-tracking-url-works"])}
-                          onChange={() => toggleSubTask("task-tracking-parcel-cwill", "sub-tracking-url-works")}
+                          onChange={() => toggleSubTask("task-tracking-parcel-panel", "sub-tracking-url-works")}
                           className="w-4 h-4 accent-slate-900 rounded-[2px] cursor-pointer"
                         />
                         <span className={activeSubTaskMap["sub-tracking-url-works"] ? "line-through text-slate-400" : "font-medium"}>
-                          Tested live tracking URL
+                          Tracking URL tested & working
+                        </span>
+                      </label>
+
+                      <label className="flex items-center gap-2 text-xs text-slate-800 cursor-pointer select-none bg-slate-50 p-2.5 rounded-[4px] border border-slate-200 hover:border-slate-300 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(activeSubTaskMap["sub-tracking-manual-test"])}
+                          onChange={() => toggleSubTask("task-tracking-parcel-panel", "sub-tracking-manual-test")}
+                          className="w-4 h-4 accent-slate-900 rounded-[2px] cursor-pointer"
+                        />
+                        <span className={activeSubTaskMap["sub-tracking-manual-test"] ? "line-through text-slate-400" : "font-medium"}>
+                          Manually test tracking
                         </span>
                       </label>
 
@@ -1444,23 +1709,35 @@ export default function Home() {
                         <input
                           type="checkbox"
                           checked={Boolean(activeSubTaskMap["sub-remove-cwill"])}
-                          onChange={() => toggleSubTask("task-tracking-parcel-cwill", "sub-remove-cwill")}
+                          onChange={() => toggleSubTask("task-cwill", "sub-remove-cwill")}
                           className="w-4 h-4 accent-slate-900 rounded-[2px] cursor-pointer"
                         />
                         <span className={activeSubTaskMap["sub-remove-cwill"] ? "line-through text-slate-400" : "font-medium"}>
-                          Sent CWILL support removal message
+                          Removed 'Powered by CWILL'
                         </span>
                       </label>
 
                       <label className="flex items-center gap-2 text-xs text-slate-800 cursor-pointer select-none bg-slate-50 p-2.5 rounded-[4px] border border-slate-200 hover:border-slate-300 transition-colors">
                         <input
                           type="checkbox"
-                          checked={Boolean(activeSubTaskMap["sub-recheck-cwill"])}
-                          onChange={() => toggleSubTask("task-tracking-parcel-cwill", "sub-recheck-cwill")}
+                          checked={Boolean(activeSubTaskMap["sub-cwill-confirm-store"])}
+                          onChange={() => toggleSubTask("task-cwill", "sub-cwill-confirm-store")}
                           className="w-4 h-4 accent-slate-900 rounded-[2px] cursor-pointer"
                         />
-                        <span className={activeSubTaskMap["sub-recheck-cwill"] ? "line-through text-slate-400" : "font-medium"}>
-                          Re-checked storefront (badge removed)
+                        <span className={activeSubTaskMap["sub-cwill-confirm-store"] ? "line-through text-slate-400" : "font-medium"}>
+                          Correct store confirmed
+                        </span>
+                      </label>
+
+                      <label className="flex items-center gap-2 text-xs text-slate-800 cursor-pointer select-none bg-slate-50 p-2.5 rounded-[4px] border border-slate-200 hover:border-slate-300 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(activeSubTaskMap["sub-cwill-recheck"])}
+                          onChange={() => toggleSubTask("task-cwill", "sub-cwill-recheck")}
+                          className="w-4 h-4 accent-slate-900 rounded-[2px] cursor-pointer"
+                        />
+                        <span className={activeSubTaskMap["sub-cwill-recheck"] ? "line-through text-slate-400" : "font-medium"}>
+                          Re-checked after removal
                         </span>
                       </label>
                     </div>
@@ -1530,7 +1807,7 @@ export default function Home() {
               )}
             </div>
 
-            {/* Right Column: Task Checklist & Progress Bar (col-span-12 lg:col-span-5 xl:col-span-4) */}
+            {/* Right Column: Task Checklist & Progress Bar */}
             <div className="lg:col-span-5 xl:col-span-4">
               <div className="bg-white border border-slate-200 rounded-[4px] p-4 shadow-sm sticky top-6">
                 {/* Header */}
@@ -1542,39 +1819,117 @@ export default function Home() {
                       <p className="text-[10px] text-slate-400">Did you complete these?</p>
                     </div>
                   </div>
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-[3px] bg-slate-100 text-slate-700 border border-slate-200">
-                    {progress.completed} of {progress.total} ({progress.percent}%)
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    {exportMsg && (
+                      <span className="text-[10px] font-semibold text-emerald-600 animate-pulse">{exportMsg}</span>
+                    )}
+                    <button
+                      onClick={exportChecklistReport}
+                      className="text-[10px] font-semibold px-2 py-1 rounded-[3px] bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200 transition-colors cursor-pointer flex items-center gap-1"
+                      title="Export report to clipboard"
+                    >
+                      <FileText className="w-3 h-3" /> Export
+                    </button>
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-[3px] bg-slate-100 text-slate-700 border border-slate-200">
+                      {progress.completed}/{progress.total} ({progress.percent}%)
+                    </span>
+                  </div>
                 </div>
 
                 {/* Progress Bar */}
                 <div className="mb-3.5">
                   <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                     <div
-                      className="h-1.5 rounded-full bg-slate-900 transition-all duration-300"
+                      className={`h-1.5 rounded-full transition-all duration-500 ${
+                        progress.percent === 100
+                          ? "bg-emerald-500"
+                          : progress.percent >= 60
+                          ? "bg-slate-900"
+                          : progress.percent >= 30
+                          ? "bg-amber-500"
+                          : "bg-slate-400"
+                      }`}
                       style={{ width: `${progress.percent}%` }}
                     />
                   </div>
+                  {/* Stage mini-bar dots */}
+                  <div className="flex gap-0.5 mt-1.5">
+                    {currentTasks.map((task) => {
+                      const totalSubs = task.children ? task.children.length : 1;
+                      const doneSubs = task.children ? task.children.filter((c) => c.completed).length : task.completed ? 1 : 0;
+                      const pct = totalSubs > 0 ? doneSubs / totalSubs : 0;
+                      return (
+                        <div
+                          key={task.id}
+                          className={`flex-1 h-1 rounded-full transition-all duration-300 ${
+                            pct === 1 ? "bg-emerald-500" : pct > 0 ? "bg-amber-400" : "bg-slate-200"
+                          }`}
+                          title={`${task.title}: ${doneSubs}/${totalSubs}`}
+                        />
+                      );
+                    })}
+                  </div>
                 </div>
 
-                {/* Creative Stage-by-Stage Task List */}
-                <div className="space-y-2 max-h-[58vh] overflow-y-auto pr-1">
+                {/* Country Quick Panel (collapsible) */}
+                {active && (
+                  <div className="mb-3">
+                    <button
+                      onClick={() => setShowCountryPanel(!showCountryPanel)}
+                      className="w-full text-[10px] font-semibold px-2.5 py-1.5 rounded-[3px] bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 transition-colors cursor-pointer flex items-center justify-between"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <Globe className="w-3 h-3" /> {active.country} Quick Links & Info
+                      </span>
+                      {showCountryPanel ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                    </button>
+                    {showCountryPanel && (
+                      <div className="mt-1.5 p-2.5 bg-sky-50/50 border border-sky-200 rounded-[3px] space-y-1.5">
+                        <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                          <a href={`https://${active.domain}/admin`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 px-2 py-1 bg-white rounded border border-sky-200 text-sky-800 hover:bg-sky-100 transition-colors">
+                            <ExternalLink className="w-2.5 h-2.5" /> Shopify Admin
+                          </a>
+                          <a href={`https://${active.domain}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 px-2 py-1 bg-white rounded border border-sky-200 text-sky-800 hover:bg-sky-100 transition-colors">
+                            <ExternalLink className="w-2.5 h-2.5" /> Live Store
+                          </a>
+                          <a href="https://docs.google.com/spreadsheets/d/1KDjoXEFPyezZoG9Cxvgn1LTNBrRrKmKoLjQd963BVSs/edit?gid=2016016033#gid=2016016033" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 px-2 py-1 bg-white rounded border border-sky-200 text-sky-800 hover:bg-sky-100 transition-colors">
+                            <ExternalLink className="w-2.5 h-2.5" /> PM Sheet
+                          </a>
+                          <a href="https://parcelpanel.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 px-2 py-1 bg-white rounded border border-sky-200 text-sky-800 hover:bg-sky-100 transition-colors">
+                            <ExternalLink className="w-2.5 h-2.5" /> Parcel Panel
+                          </a>
+                        </div>
+                        <div className="text-[10px] text-sky-700 bg-white px-2 py-1.5 rounded border border-sky-200 space-y-0.5">
+                          <div><span className="font-semibold">Currency:</span> {active.currency}</div>
+                          <div><span className="font-semibold">Language:</span> {active.language}</div>
+                          <div><span className="font-semibold">Shipping:</span> Free Express (all stores)</div>
+                          <div><span className="font-semibold">Theme:</span> Impulse</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Stage-by-Stage Task List */}
+                <div className="space-y-2 max-h-[52vh] overflow-y-auto pr-1">
                   {currentTasks.map((task, idx) => {
                     const totalSubs = task.children ? task.children.length : 1;
                     const completedSubs = task.children
                       ? task.children.filter((c) => c.completed).length
-                      : task.completed
-                      ? 1
-                      : 0;
+                      : task.completed ? 1 : 0;
                     const isStageComplete = task.completed || (task.children && task.children.length > 0 && completedSubs === totalSubs);
+                    const isInProgress = !isStageComplete && completedSubs > 0;
                     const isCollapsed = collapsedTasks[task.id];
+                    const stagePct = totalSubs > 0 ? Math.round((completedSubs / totalSubs) * 100) : 0;
 
                     return (
                       <div
                         key={task.id}
                         className={`border rounded-[4px] transition-all overflow-hidden ${
                           isStageComplete
-                            ? "bg-slate-50/80 border-slate-200"
+                            ? "bg-emerald-50/40 border-emerald-200"
+                            : task.isCritical && !isStageComplete
+                            ? "bg-white border-rose-200 hover:border-rose-300"
                             : "bg-white border-slate-200 hover:border-slate-300"
                         }`}
                       >
@@ -1584,59 +1939,61 @@ export default function Home() {
                             onClick={() => toggleTask(task.id)}
                             className="flex items-center gap-2.5 flex-1 min-w-0"
                           >
-                            {/* Circular Milestone Number / Checkmark */}
+                            {/* Status Circle */}
                             <div
                               className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 transition-colors ${
                                 isStageComplete
-                                  ? "bg-slate-900 text-white"
+                                  ? "bg-emerald-500 text-white"
+                                  : task.isCritical
+                                  ? "bg-rose-100 text-rose-700 border border-rose-300"
                                   : "bg-slate-100 text-slate-600 border border-slate-300"
                               }`}
                             >
                               {isStageComplete ? <Check className="w-3 h-3" strokeWidth={3} /> : idx + 1}
                             </div>
 
-                            <span
-                              className={`text-xs font-semibold truncate flex items-center gap-1.5 ${
-                                isStageComplete ? "line-through text-slate-400" : "text-slate-800"
-                              }`}
-                            >
-                              <span>{task.title}</span>
-                              {task.isCritical && (
-                                <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 uppercase tracking-wide shrink-0">
-                                  Priority
-                                </span>
+                            <div className="flex-1 min-w-0">
+                              <span
+                                className={`text-xs font-semibold truncate flex items-center gap-1.5 ${
+                                  isStageComplete ? "text-emerald-700" : "text-slate-800"
+                                }`}
+                              >
+                                <span className={isStageComplete ? "line-through" : ""}>{task.title}</span>
+                                {task.isCritical && (
+                                  <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200 uppercase tracking-wide shrink-0">
+                                    Critical
+                                  </span>
+                                )}
+                              </span>
+                              {/* Mini progress bar per stage */}
+                              {!isStageComplete && stagePct > 0 && (
+                                <div className="w-full bg-slate-100 rounded-full h-0.5 mt-1">
+                                  <div className="h-0.5 rounded-full bg-amber-400 transition-all" style={{ width: `${stagePct}%` }} />
+                                </div>
                               )}
-                            </span>
+                            </div>
                           </div>
 
-                          {/* Subtask Counter & Collapse Arrow */}
+                          {/* Counter + Actions + Collapse */}
                           <div className="flex items-center gap-1.5 shrink-0">
                             {task.children && task.children.length > 0 && (
                               <span
                                 className={`text-[10px] font-mono font-medium px-1.5 py-0.5 rounded-[3px] ${
-                                  isStageComplete
-                                    ? "bg-slate-200 text-slate-800"
-                                    : "bg-slate-100 text-slate-500"
+                                  isStageComplete ? "bg-emerald-100 text-emerald-700"
+                                  : isInProgress ? "bg-amber-100 text-amber-700"
+                                  : "bg-slate-100 text-slate-500"
                                 }`}
                               >
                                 {completedSubs}/{totalSubs}
                               </span>
                             )}
-
                             {task.children && task.children.length > 0 && (
                               <button
                                 type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleCollapseTask(task.id);
-                                }}
+                                onClick={(e) => { e.stopPropagation(); toggleCollapseTask(task.id); }}
                                 className="text-slate-400 hover:text-slate-700 p-0.5 transition-colors"
                               >
-                                {isCollapsed ? (
-                                  <ChevronRight className="w-3.5 h-3.5" />
-                                ) : (
-                                  <ChevronDown className="w-3.5 h-3.5" />
-                                )}
+                                {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                               </button>
                             )}
                           </div>
@@ -1656,17 +2013,57 @@ export default function Home() {
                                   onChange={() => toggleSubTask(task.id, sub.id)}
                                   className="w-3.5 h-3.5 accent-slate-900 rounded-[2px] cursor-pointer shrink-0"
                                 />
-                                <span
-                                  className={`text-[11px] leading-tight transition-colors ${
-                                    sub.completed
-                                      ? "line-through text-slate-400"
-                                      : "text-slate-600 group-hover:text-slate-900"
-                                  }`}
-                                >
-                                  {sub.title}
-                                </span>
+                                <div className="flex-1 min-w-0">
+                                  <span
+                                    className={`text-[11px] leading-tight transition-colors ${
+                                      sub.completed ? "line-through text-emerald-600" : "text-slate-600 group-hover:text-slate-900"
+                                    }`}
+                                  >
+                                    {sub.title}
+                                  </span>
+                                  {sub.completed && sub.completedAt && (
+                                    <span className="text-[9px] text-slate-400 ml-1.5">
+                                      {new Date(sub.completedAt).toLocaleDateString()}
+                                    </span>
+                                  )}
+                                </div>
                               </label>
                             ))}
+                            {/* Quick Actions Row */}
+                            <div className="flex items-center justify-between pt-1.5 border-t border-slate-100">
+                              <button
+                                type="button"
+                                onClick={() => toggleMarkAllDone(task.id)}
+                                className="text-[10px] font-medium text-slate-500 hover:text-slate-900 flex items-center gap-1 cursor-pointer transition-colors"
+                              >
+                                <Check className="w-3 h-3" /> {isStageComplete ? "Unmark All" : "Mark All Done"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditingNoteTaskId(editingNoteTaskId === task.id ? null : task.id)}
+                                className="text-[10px] font-medium text-slate-500 hover:text-slate-900 flex items-center gap-1 cursor-pointer transition-colors"
+                                title="Add a quick note for this stage"
+                              >
+                                {task.stageNote ? "\u{1F4DD} Edit Note" : "+ Note"}
+                              </button>
+                            </div>
+                            {/* Stage Note */}
+                            {editingNoteTaskId === task.id && (
+                              <div className="pt-1">
+                                <textarea
+                                  rows={2}
+                                  value={task.stageNote || ""}
+                                  onChange={(e) => saveStageNote(task.id, e.target.value)}
+                                  placeholder="Quick note for this stage..."
+                                  className="w-full px-2 py-1 text-[10px] rounded-[3px] border border-slate-200 bg-white text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-slate-900 resize-none"
+                                />
+                              </div>
+                            )}
+                            {task.stageNote && editingNoteTaskId !== task.id && (
+                              <div className="text-[10px] text-slate-500 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+                                {"\u{1F4DD}"} {task.stageNote}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -1674,9 +2071,9 @@ export default function Home() {
                   })}
                 </div>
 
-                {/* Add Custom Task Input */}
-                <div className="mt-3.5 pt-3 border-t border-slate-100">
-                  <form onSubmit={handleAddCustomTask} className="flex gap-1.5 mb-1.5">
+                {/* Add Custom Task & Actions */}
+                <div className="mt-3.5 pt-3 border-t border-slate-100 space-y-2">
+                  <form onSubmit={handleAddCustomTask} className="flex gap-1.5">
                     <input
                       type="text"
                       placeholder="+ Add personal task..."
@@ -1688,15 +2085,19 @@ export default function Home() {
                       Add
                     </Button>
                   </form>
-
-                  <div className="flex justify-end">
+                  <div className="flex items-center justify-between">
                     <button
                       type="button"
                       onClick={resetStoreTasks}
                       className="text-[10px] text-slate-400 hover:text-slate-700 flex items-center gap-1 cursor-pointer"
                     >
-                      <RotateCcw className="w-3 h-3" /> Reset Checklist
+                      <RotateCcw className="w-3 h-3" /> Reset
                     </button>
+                    {progress.percent === 100 && (
+                      <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                        <Check className="w-3 h-3" /> All Done! Ready for QA
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

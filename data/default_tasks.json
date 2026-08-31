@@ -7,89 +7,148 @@
       { "id": "sub-theme-impulse", "title": "Impulse Theme configured", "completed": false },
       { "id": "sub-logo-name", "title": "Logo + Store Name updated", "completed": false },
       { "id": "sub-favicon", "title": "Favicon uploaded & verified", "completed": false },
-      { "id": "sub-brand-colors", "title": "Brand Colors set", "completed": false }
+      { "id": "sub-brand-colors", "title": "Brand Colors set", "completed": false },
+      { "id": "sub-logo-reference", "title": "Logo ঠিক করা — reference অনুযায়ী", "completed": false }
+    ]
+  },
+  {
+    "id": "task-seo",
+    "title": "2. SEO",
+    "completed": false,
+    "children": [
+      { "id": "sub-seo-meta-title", "title": "Meta Title set", "completed": false },
+      { "id": "sub-seo-meta-desc", "title": "Meta Description set", "completed": false },
+      { "id": "sub-seo-social-image", "title": "SEO / Social Sharing Image uploaded", "completed": false }
     ]
   },
   {
     "id": "task-checkout",
-    "title": "2. Checkout",
+    "title": "3. Checkout",
     "completed": false,
     "children": [
       { "id": "sub-checkout-logo", "title": "Checkout Logo placed", "completed": false },
-      { "id": "sub-checkout-color", "title": "Checkout Brand Accent Color matched", "completed": false },
+      { "id": "sub-checkout-color", "title": "Checkout Brand Color matched", "completed": false },
       { "id": "sub-checkout-title", "title": "Checkout Title & Branding verified", "completed": false }
     ]
   },
   {
     "id": "task-pages",
-    "title": "3. Pages",
+    "title": "4. Pages",
     "completed": false,
     "children": [
       { "id": "sub-pages-translation", "title": "Natural local-language translation", "completed": false },
       { "id": "sub-pages-credentials", "title": "Correct Company / Contact / Address aligned", "completed": false },
+      { "id": "sub-pages-contact-all", "title": "সব page-এ Contact Information আছে", "completed": false },
+      { "id": "sub-pages-business-info", "title": "Our Business Information ঠিক আছে", "completed": false },
       { "id": "sub-pages-no-insta", "title": "No unnecessary Instagram repetition", "completed": false }
     ]
   },
   {
-    "id": "task-shipping",
-    "title": "4. Shipping",
+    "id": "task-collections",
+    "title": "5. Collections",
     "completed": false,
     "children": [
-      { "id": "sub-shipping-free", "title": "Free Express Shipping translated to local language", "completed": false },
-      { "id": "sub-shipping-consistent", "title": "Store-wide free shipping consistency verified", "completed": false }
+      { "id": "sub-collections-only-main", "title": "Only Main Collections আছে", "completed": false },
+      { "id": "sub-collections-tags", "title": "Collection-এর জন্য Tags / conditions use করা আছে", "completed": false },
+      { "id": "sub-collections-no-subcat", "title": "❌ Sub-category / Sub-menu add না করা", "completed": false },
+      { "id": "sub-collections-no-footer-extra", "title": "❌ Extra collection footer-এ না রাখা", "completed": false }
     ]
   },
   {
-    "id": "task-tracking-parcel-cwill",
-    "title": "5. Tracking / Parcel Panel & CWILL",
-    "isCritical": true,
+    "id": "task-discounts",
+    "title": "6. Discounts",
     "completed": false,
     "children": [
-      { "id": "sub-parcel-panel-config", "title": "Parcel Panel configured & live", "completed": false },
-      { "id": "sub-shipment-statuses", "title": "Custom Shipment Statuses set (3, 6, 9 days)", "completed": false },
-      { "id": "sub-blacklist-keywords", "title": "Filter Keywords added to settings", "completed": false },
-      { "id": "sub-tracking-url-works", "title": "Tracking URL tested & working", "completed": false },
-      { "id": "sub-remove-cwill", "title": "Remove Powered by CWILL branding", "completed": false },
-      { "id": "sub-contact-support", "title": "Contacted CWILL live support", "completed": false },
-      { "id": "sub-confirm-store", "title": "Correct store confirmed with support", "completed": false },
-      { "id": "sub-recheck-cwill", "title": "Re-check storefront after removal", "completed": false }
+      { "id": "sub-discount-10", "title": "10% Discount created", "completed": false },
+      { "id": "sub-discount-15", "title": "15% Discount created", "completed": false },
+      { "id": "sub-discount-20", "title": "20% Discount created", "completed": false }
     ]
   },
   {
     "id": "task-product-page",
-    "title": "6. Product Page",
+    "title": "7. Product Page",
     "completed": false,
     "children": [
-      { "id": "sub-payment-logos", "title": "Local payment logos placed correctly", "completed": false },
-      { "id": "sub-clean-alignment", "title": "Clean alignment & minimal layout", "completed": false },
-      { "id": "sub-do-not-remove", "title": "Do not remove elements without instruction", "completed": false }
+      { "id": "sub-product-swatch", "title": "Color-এর নিচে Image Swatch আছে", "completed": false },
+      { "id": "sub-product-swatch-king", "title": "Swatch King app installed & configured", "completed": false },
+      { "id": "sub-product-payment-logos", "title": "Payment logos এক লাইনে", "completed": false },
+      { "id": "sub-product-cart-blocks", "title": "Cart button-এর নিচের blocks → reference-এর মতো", "completed": false },
+      { "id": "sub-product-no-remove", "title": "❌ কিছু নিজে থেকে remove না করা", "completed": false }
+    ]
+  },
+  {
+    "id": "task-cart-drawer",
+    "title": "8. Cart Drawer",
+    "completed": false,
+    "children": [
+      { "id": "sub-cart-drawer-ref", "title": "Cart Drawer same like reference", "completed": false }
+    ]
+  },
+  {
+    "id": "task-shipping",
+    "title": "9. Shipping",
+    "completed": false,
+    "children": [
+      { "id": "sub-shipping-free", "title": "Free Express Shipping → local language", "completed": false },
+      { "id": "sub-shipping-consistent", "title": "Store-wide consistency verified", "completed": false }
+    ]
+  },
+  {
+    "id": "task-tracking-parcel-panel",
+    "title": "10. Tracking / Parcel Panel",
+    "isCritical": true,
+    "completed": false,
+    "children": [
+      { "id": "sub-parcel-panel-config", "title": "Parcel Panel configured", "completed": false },
+      { "id": "sub-tracking-page-config", "title": "Tracking Page configured", "completed": false },
+      { "id": "sub-tracking-exact-docs", "title": "Docs-এর মতো 100% exact", "completed": false },
+      { "id": "sub-shipment-statuses", "title": "Custom Shipment Statuses set", "completed": false },
+      { "id": "sub-tracking-url-works", "title": "Tracking URL works", "completed": false },
+      { "id": "sub-tracking-manual-test", "title": "Manually test tracking", "completed": false }
+    ]
+  },
+  {
+    "id": "task-cwill",
+    "title": "11. CWILL",
+    "isCritical": true,
+    "completed": false,
+    "children": [
+      { "id": "sub-remove-cwill", "title": "Remove 'Powered by CWILL'", "completed": false },
+      { "id": "sub-cwill-confirm-store", "title": "Correct store confirmed", "completed": false },
+      { "id": "sub-cwill-recheck", "title": "Re-check after removal", "completed": false }
     ]
   },
   {
     "id": "task-cookie-banner",
-    "title": "7. Cookie Banner",
+    "title": "12. Cookie",
     "completed": false,
     "children": [
-      { "id": "sub-cookie-remove", "title": "Cookie Banner removed", "completed": false },
+      { "id": "sub-cookie-remove", "title": "Cookie Banner REMOVE", "completed": false },
       { "id": "sub-test-storefront", "title": "Test storefront clean view", "completed": false }
     ]
   },
   {
-    "id": "task-collections",
-    "title": "8. Collections",
-    "completed": false,
-    "children": [
-      { "id": "sub-collection-tags", "title": "Add tag conditions matching Collection names", "completed": false }
-    ]
-  },
-  {
     "id": "task-final-qa",
-    "title": "9. Final QA & Review",
+    "title": "13. Final QA & Review",
     "isCritical": true,
     "completed": false,
     "children": [
-      { "id": "sub-sequential-check", "title": "Sequential check: Theme, Checkout, Pages, Shipping, Tracking, CWILL, Payment Logos, Cookie", "completed": false },
-      { "id": "sub-final-test-order", "title": "Perform final live test checkout order", "completed": false }
+      { "id": "sub-qa-theme", "title": "Theme ✓", "completed": false },
+      { "id": "sub-qa-seo", "title": "SEO ✓", "completed": false },
+      { "id": "sub-qa-checkout", "title": "Checkout ✓", "completed": false },
+      { "id": "sub-qa-pages", "title": "Pages ✓", "completed": false },
+      { "id": "sub-qa-collections", "title": "Collections ✓", "completed": false },
+      { "id": "sub-qa-discounts", "title": "Discounts ✓", "completed": false },
+      { "id": "sub-qa-shipping", "title": "Shipping ✓", "completed": false },
+      { "id": "sub-qa-product-page", "title": "Product Page ✓", "completed": false },
+      { "id": "sub-qa-payment-logos", "title": "Payment Logos ✓", "completed": false },
+      { "id": "sub-qa-cart-drawer", "title": "Cart Drawer ✓", "completed": false },
+      { "id": "sub-qa-parcel-panel", "title": "Parcel Panel ✓", "completed": false },
+      { "id": "sub-qa-tracking", "title": "Tracking ✓", "completed": false },
+      { "id": "sub-qa-cwill", "title": "CWILL ✓", "completed": false },
+      { "id": "sub-qa-cookie", "title": "Cookie ✓", "completed": false },
+      { "id": "sub-qa-contact-info", "title": "Contact Info ✓", "completed": false },
+      { "id": "sub-final-test-order", "title": "Final Live Test / Checkout Order", "completed": false }
     ]
   }
 ]
