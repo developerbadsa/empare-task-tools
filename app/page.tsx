@@ -343,10 +343,19 @@ const DEFAULT_RAW_TEMPLATES = [
       "- Currency: {CURRENCY}\n\n" +
       "**STRICT RULES:**\n" +
       "1. 100% BRAND REPLACEMENT: Replace EVERY reference brand name, entity, email, domain, phone, and address with my store data above.\n" +
-      "2. NO INVENTING DATA: If any data is not present in the reference text, SKIP it cleanly. Never hallucinate or invent fake phone numbers or addresses.\n" +
+      "2. NO INVENTING DATA: If any data is not present in the reference text, SKIP it cleanly. Never hallucinate or invent fake phone numbers, addresses, payment methods, shipping details, or other business information.\n" +
       "3. NATIVE LOCALIZATION: Write in natural, idiomatic local **{LANGUAGE}** as spoken by real native speakers in **{COUNTRY}** (strictly no robotic word-for-word translation).\n" +
       "4. STANDARD HIERARCHY: Format headings with **26px** and body paragraphs with **14px**.\n" +
-      "5. COUNTRY VERIFICATION: Verify all payment methods (e.g. BLIK/Przelewy24 for Poland, MobilePay for Denmark), shipping, currencies, and taxes belong strictly to **{COUNTRY}**. Automatically remove options from other countries.",
+      "5. COUNTRY VERIFICATION: Verify all payment methods, shipping options, currencies, taxes, and other country-specific information belong strictly to **{COUNTRY}**. Automatically remove options from other countries.\n" +
+      "6. BUSINESS INFORMATION FORMAT: Whenever the reference page contains a business/company information section, ALWAYS present it using this exact heading and exact numbered structure. Do not change the order, numbering, or labels:\n\n" +
+      "**Our Business Information**\n\n" +
+      "1. Store Name:\n" +
+      "2. Company Name:\n" +
+      "3. E-mail:\n" +
+      "4. Address:\n" +
+      "5. Service Hours:\n\n" +
+      "7. BUSINESS INFORMATION VALUES: Fill the above fields only with the official store credentials provided in this prompt. Never add extra business information, fields, phone numbers, social links, registration numbers, or other details unless they are explicitly provided in the official store credentials.\n" +
+      "8. BUSINESS INFORMATION LANGUAGE: Keep the heading and field labels exactly as written above unless I specifically ask you to translate them. The values should use the official store data exactly as provided.",
   },
   {
     id: "translate-text",
