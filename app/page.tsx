@@ -422,15 +422,30 @@ const DEFAULT_RAW_TEMPLATES = [
       "✓ Final image looks like a real premium commercial photo\n\n" +
       "If any answer is NO, correct it before final output.\n\n" +
       "==================================================\n" +
+      "==================================================\n" +
+      "13. IMAGE RATIO, DIMENSIONS & SIZE PRESERVATION\n" +
+      "==================================================\n\n" +
+      "Analyze the reference image's exact aspect ratio and dimensions.\n" +
+      "The output image MUST match the reference image exactly in:\n" +
+      "- aspect ratio (e.g. 1:1, 4:5, 16:9, 3:4, 2:3)\n" +
+      "- orientation (landscape, portrait, square)\n" +
+      "- proportional composition\n" +
+      "- relative subject sizing within the frame\n\n" +
+      "Do NOT crop tighter or wider than the reference.\n" +
+      "Do NOT change landscape to portrait or vice versa.\n" +
+      "Do NOT add extra empty space or cut off elements that were within the reference frame.\n" +
+      "The output must feel like a direct 1:1 dimensional match of the reference, with all transformations applied inside the same frame.\n\n" +
+      "==================================================\n" +
       "ABSOLUTE FINAL COMMAND\n" +
       "==================================================\n\n" +
-      "KEEP: core product, product details, useful pose, camera angle, framing, visual composition.\n" +
+      "KEEP: core product, product details, useful pose, camera angle, framing, visual composition, image ratio and dimensions.\n" +
       "CHANGE COMPLETELY: original human identity, face, background, environmental identity, all source branding and visible text.\n\n" +
       "FINAL RULE:\n" +
       "FACE CHANGE = COMPLETE AND OBVIOUS.\n" +
       "BACKGROUND CHANGE = COMPLETE AND OBVIOUS.\n" +
       "LOCAL COUNTRY / LOCATION VIBE = STRONG, AUTHENTIC, AND BELIEVABLE.\n" +
       "PRODUCT CHANGE = NONE, EXCEPT NECESSARY CLEANUP FOR BRAND/TEXT REMOVAL.\n" +
+      "IMAGE RATIO & DIMENSIONS = EXACT MATCH TO REFERENCE.\n" +
       "NO TEXT ANYWHERE UNLESS EXPLICITLY REQUESTED.",
   },
   {
