@@ -310,6 +310,7 @@ export async function saveUserData(data: {
   activeId?: string;
   customPrompts?: Record<string, string>;
   tasks?: Record<string, any>;
+  countryLearning?: any[];
 }): Promise<any> {
   const cleanEmail = data.email.trim().toLowerCase();
   const db = await getDb();
@@ -334,6 +335,7 @@ export async function saveUserData(data: {
     activeId: data.activeId || (stores[0] ? stores[0].id : ""),
     customPrompts: data.customPrompts || {},
     tasks: cleanedTasks,
+    countryLearning: data.countryLearning || [],
     updatedAt: now,
   };
 
@@ -348,6 +350,7 @@ export async function saveUserData(data: {
             activeId: userRecord.activeId,
             customPrompts: userRecord.customPrompts,
             tasks: userRecord.tasks,
+            countryLearning: userRecord.countryLearning,
             updatedAt: now,
           },
           $setOnInsert: { email: cleanEmail },

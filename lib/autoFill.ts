@@ -817,6 +817,14 @@ export function autoFillStore(fields: {
     if (r) signals.push(r);
   }
 
+  // 9. Learned data (from previous store entries)
+  const learned = detectFromLearning({
+    country: fields.country,
+    language: fields.language,
+    currency: fields.currency,
+  });
+  if (learned) signals.push(learned);
+
   // If no signals found, return empty
   if (signals.length === 0) {
     return { filled: {}, suggestions: {}, sources: [] };
@@ -906,4 +914,173 @@ export function autoFillStore(fields: {
 
   const uniqueSources = [...new Set(sources)];
   return { filled, suggestions, sources: uniqueSources };
+}
+
+// ─── Country Learning System ─────────────────────────────────────────
+// Remembers what users entered per country and suggests it next time.
+// Persisted in localStorage so it survives page refreshes.
+
+export interface CountryLearningEntry {
+  country: string;
+  language: string;
+  currency: string;
+  hours: string;
+  companySuffix: string;
+  count: number; // how many times this combo was used
+  lastUsed: string; // ISO date string
+}
+
+const LEARNING_STORAGE_KEY = "store_toolkit_country_learning";
+
+/** Load all learned country data from localStorage */
+export function loadCountryLearning(): CountryLearningEntry[] {
+  try {
+    if (typeof window === "undefined") return [];
+    const raw = localStorage.getItem(LEARNING_STORAGE_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw) || [];
+  } catch {
+    return [];
+  }
+}
+
+/** Save learned country data to localStorage */
+function saveCountryLearning(entries: CountryLearningEntry[]): void {
+  try {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(LEARNING_STORAGE_KEY, JSON.stringify(entries));
+  } catch {
+    // localStorage full or unavailable — silently fail
+  }
+}
+
+/** Learn from a saved store — record what was used for each country */
+export function learnFromStore(store: {
+  country?: string;
+  language?: string;
+  currency?: string;
+  hours?: string;
+  company?: string;
+}): void {
+  if (!store.country) return;
+
+  const entries = loadCountryLearning();
+  const countryLower = store.country.toLowerCase();
+  const existing = entries.find((e) => e.country.toLowerCase() === countryLower);
+
+  // Extract company suffix from full company name
+  let companySuffix = "";
+  if (store.company) {
+    for (const [key, data] of Object.entries(COUNTRY_DB)) {
+      if (data.country.toLowerCase() === countryLower) {
+        for (const suffix of data.companySuffix) {
+          if (store.company.toLowerCase().includes(suffix)) {
+            companySuffix = suffix;
+            break;
+          }
+        }
+        break;
+      }
+    }
+  }
+
+  if (existing) {
+    // Update existing entry — increase count, update fields if they differ
+    existing.count++;
+    existing.lastUsed = new Date().toISOString();
+    if (store.language) existing.language = store.language;
+    if (store.currency) existing.currency = store.currency;
+    if (store.hours) existing.hours = store.hours;
+    if (companySuffix) existing.companySuffix = companySuffix;
+  } else {
+    // Create new entry
+    entries.push({
+      country: store.country,
+      language: store.language || "",
+      currency: store.currency || "",
+      hours: store.hours || "",
+      companySuffix,
+      count: 1,
+      lastUsed: new Date().toISOString(),
+    });
+  }
+
+  saveCountryLearning(entries);
+}
+
+/** Get learned data for a specific country */
+export function getLearnedForCountry(country: string): CountryLearningEntry | null {
+  const entries = loadCountryLearning();
+  const countryLower = country.toLowerCase();
+  return entries.find((e) => e.country.toLowerCase() === countryLower) || null;
+}
+
+/** Get top N most-used countries from learning data */
+export function getMostUsedCountries(n: number = 5): CountryLearningEntry[] {
+  const entries = loadCountryLearning();
+  return entries.sort((a, b) => b.count - a.count).slice(0, n);
+}
+
+/** Clear all learning data */
+export function clearCountryLearning(): void {
+  saveCountryLearning([]);
+}
+
+/**
+ * Detect from learned country data — the more times a country combo was used,
+ * the higher the confidence.
+ */
+export function detectFromLearning(fields: {
+  country?: string;
+  language?: string;
+  currency?: string;
+}): AutoFillResult | null {
+  const entries = loadCountryLearning();
+  if (entries.length === 0) return null;
+
+  // If user already set country, look up learned data for it
+  if (fields.country) {
+    const countryLower = fields.country.toLowerCase();
+    const match = entries.find((e) => e.country.toLowerCase() === countryLower);
+    if (match && match.count >= 1) {
+      // Confidence increases with usage count: 0.6 + (count * 0.05), max 0.95
+      const confidence = Math.min(0.6 + match.count * 0.05, 0.95);
+      return {
+        country: match.country,
+        language: match.language,
+        currency: match.currency,
+        hours: match.hours,
+        confidence,
+        source: `learned data (${match.country}, used ${match.count}x)`,
+      };
+    }
+  }
+
+  // If user set language or currency, try to find matching learned country
+  if (fields.language || fields.currency) {
+    for (const entry of entries) {
+      if (fields.language && entry.language.toLowerCase() === fields.language.toLowerCase()) {
+        return {
+          country: entry.country,
+          language: entry.language,
+          currency: entry.currency,
+          hours: entry.hours,
+          confidence: Math.min(0.5 + entry.count * 0.05, 0.85),
+          source: `learned from language (${entry.language}, used ${entry.count}x)`,
+        };
+      }
+      if (fields.currency && entry.currency.toLowerCase() === fields.currency.toLowerCase()) {
+        return {
+          country: entry.country,
+          language: entry.language,
+          currency: entry.currency,
+          hours: entry.hours,
+          confidence: Math.min(0.5 + entry.count * 0.05, 0.85),
+          source: `learned from currency (${entry.currency}, used ${entry.count}x)`,
+        };
+      }
+    }
+  }
+
+  return null;
 }

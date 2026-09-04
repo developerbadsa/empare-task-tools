@@ -24,7 +24,7 @@ import {
   Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { autoFillStore, getSupportedCountries, TOP_COUNTRIES } from "@/lib/autoFill";
+import { autoFillStore, getSupportedCountries, TOP_COUNTRIES, learnFromStore, loadCountryLearning, CountryLearningEntry } from "@/lib/autoFill";
 
 interface UserProfile {
   name: string;
@@ -308,15 +308,130 @@ const DEFAULT_RAW_TEMPLATES = [
     id: "image-transform",
     title: "Image Transform",
     rawText:
-      "Act as an expert e-commerce visual director. Your objective is to transform the attached reference image into a new photorealistic, high-end commercial photo for **{STORE_NAME}** ({COUNTRY}).\n\n" +
-      "MANDATORY STRICT RULES:\n\n" +
-      "COMPLETE BRAND REMOVAL: Detect and 100% remove all reference logos, brand names, watermarks, tags, Asian/Chinese text, and promotional labels. Replace with clean unbranded surfaces or {STORE_NAME} styling where necessary.\n\n" +
-      "MODEL PRESENCE & DEMOGRAPHIC (STRONG CONDITIONAL RULE): First, analyze the original reference image to see if any people (models or characters) are present.\n\n" +
-      "IF PEOPLE ARE PRESENT: You must completely replace them with new, natural-looking models native to **{COUNTRY}** (matching realistic European/Scandinavian facial features, natural skin tone, hair styling, eye color, and cultural fashion).\n\n" +
-      "IF NO PEOPLE ARE PRESENT: You absolutely must not add any new models or characters to the scene. The scene should remain unpopulated.\n\n" +
-      "AUTHENTIC ENVIRONMENT: Replace the background with an authentic, modern setting matching **{COUNTRY}** (e.g., a clean minimalist Scandinavian-influenced interior or exterior, warm natural lighting, with a summer ambiance if applicable).\n\n" +
-      "PRODUCT & FIDELITY: Keep the exact product shape, composition, camera angle, pose (of objects or products), framing, and true-to-life texture of all core products and foreground elements unchanged.\n\n" +
-      "ZERO UNWANTED TEXT / NO CGI: Do NOT invent or add any random floating text, badges, or CGI artifacts. Keep output 100% photorealistic, crisp, and studio-grade.",
+      "MASTER PROMPT — ULTRA-LOCALIZED E-COMMERCE IMAGE TRANSFORMATION\n\n" +
+      "ROLE: Act as an elite e-commerce visual director, premium commercial photographer, localization specialist, and high-end photo retoucher.\n\n" +
+      "OBJECTIVE: Transform the provided reference image into a completely new, ultra-photorealistic, premium commercial lifestyle image for:\n" +
+      "TARGET BRAND: **{STORE_NAME}**\n" +
+      "TARGET COUNTRY: **{COUNTRY}**\n" +
+      "TARGET LOCAL CONTEXT: {LOGO_TEXT} brand identity\n\n" +
+      "The final image must look like a real, high-end commercial photograph naturally created for a local e-commerce campaign in the target country.\n\n" +
+      "==================================================\n" +
+      "CORE PRIORITY ORDER\n" +
+      "==================================================\n\n" +
+      "1. Preserve the core product accurately.\n" +
+      "2. Completely replace the human face/identity if any person is present.\n" +
+      "3. Completely replace the original background/environment.\n" +
+      "4. Make the entire result feel authentically local to the target country/location.\n" +
+      "5. Remove all source branding, logos, watermarks, and text.\n" +
+      "6. Keep the final result 100% photorealistic and commercially polished.\n\n" +
+      "==================================================\n" +
+      "1. COMPLETE BRAND / WATERMARK / LABEL / TEXT REMOVAL\n" +
+      "==================================================\n\n" +
+      "Detect and completely remove all visible:\n" +
+      "- logos, brand names, watermarks, tags, labels, stickers\n" +
+      "- promotional graphics, QR codes, packaging text\n" +
+      "- foreign-language text (Asian/Chinese/Japanese/Korean)\n" +
+      "- shop names, signboards, street names, menu boards\n" +
+      "- posters, window lettering, random readable numbers\n" +
+      "- any other source-origin text or marks\n\n" +
+      "Replace removed areas with clean unbranded surfaces, realistic textures, blank signage, neutral architectural details. Do NOT invent replacement text.\n\n" +
+      "==================================================\n" +
+      "2. ZERO-TEXT / ZERO-SIGNAGE RULE — ABSOLUTE\n" +
+      "==================================================\n\n" +
+      "The final image must contain ZERO unintended readable text anywhere.\n" +
+      "STRICTLY FORBIDDEN: signs, names, menu boards, posters, slogans, storefront text, wall text, labels, café names, street signs, road text, vehicle text, license plate text, logos, watermarks, random characters, AI gibberish text.\n" +
+      "NO TEXT ANYWHERE IN THE IMAGE UNLESS EXPLICITLY REQUESTED.\n\n" +
+      "==================================================\n" +
+      "3. HUMAN PRESENCE — STRICT CONDITIONAL RULE\n" +
+      "==================================================\n\n" +
+      "First inspect the reference image.\n\n" +
+      "IF NO PEOPLE ARE PRESENT: Do NOT add any person, face, mannequin, silhouette, or human-like figure. Keep the scene naturally unpopulated.\n\n" +
+      "IF PEOPLE ARE PRESENT: Completely discard the original person's identity. Replace with a completely NEW person. This is NOT a light retouch, minor variation, or lookalike.\n\n" +
+      "MANDATORY IDENTITY CHANGES:\n" +
+      "- clearly different face shape and overall facial structure\n" +
+      "- different jawline, cheekbone, nose shape\n" +
+      "- different eye shape, spacing, eyebrows\n" +
+      "- different lips, mouth shape, hairline\n" +
+      "- different hairstyle, facial hair, skin details\n" +
+      "- different overall visual identity\n\n" +
+      "The face change must be strong, obvious, and immediately noticeable. If the new person could reasonably be mistaken for the original, regenerate.\n\n" +
+      "==================================================\n" +
+      "4. LOCAL HUMAN APPEARANCE RULE\n" +
+      "==================================================\n\n" +
+      "The replacement person must look visually and culturally plausible as a contemporary local person from **{COUNTRY}**.\n\n" +
+      "Localize naturally through:\n" +
+      "- locally plausible appearance, natural skin tone range\n" +
+      "- realistic hairstyle, grooming, makeup if relevant\n" +
+      "- locally appropriate accessories, seasonal styling\n" +
+      "- contemporary local fashion, everyday lifestyle appearance\n\n" +
+      "The person must look like someone genuinely photographed in real life in the target location. Do NOT use caricatures, exaggerated ethnic stereotypes, or costume-like styling.\n\n" +
+      "==================================================\n" +
+      "5. PRODUCT / GARMENT / FOREGROUND FIDELITY\n" +
+      "==================================================\n\n" +
+      "Preserve the core product exactly. Keep unchanged: exact shape, silhouette, proportions, material appearance, texture, stitching, folds, seams, edges, structure, orientation, functional details, clothing cut and construction.\n" +
+      "Do NOT redesign, simplify, or replace the product. The final output must clearly preserve the same core product from the reference.\n\n" +
+      "==================================================\n" +
+      "6. POSE / FRAMING / COMPOSITION PRESERVATION\n" +
+      "==================================================\n\n" +
+      "Preserve as closely as possible: body pose, posture, head direction, hand position, framing, crop, camera angle, perspective, subject placement, visual hierarchy.\n" +
+      "FACE/IDENTITY must change. BACKGROUND must change. But useful pose and composition should remain aligned.\n\n" +
+      "==================================================\n" +
+      "7. COMPLETE BACKGROUND & ENVIRONMENT REPLACEMENT\n" +
+      "==================================================\n\n" +
+      "Do NOT merely tweak, clean, blur, or recolor the original background. Completely replace it with a new environment that is clearly different and authentically local to **{COUNTRY}**.\n\n" +
+      "The new environment must NOT preserve recognizable buildings, walls, architecture, landmarks, vegetation, street layout, furniture, or distinctive scene identity. The location change must be strong, obvious, and unmistakable.\n\n" +
+      "==================================================\n" +
+      "8. AUTHENTIC LOCALIZATION — ENVIRONMENT\n" +
+      "==================================================\n\n" +
+      "Create an environment that strongly feels local through realistic use of:\n" +
+      "- architecture, street design, pavements\n" +
+      "- interior/exterior materials, windows, doors\n" +
+      "- furniture, decor, landscaping, plants\n" +
+      "- climate, season, daylight quality\n" +
+      "- local lifestyle cues, everyday surroundings\n\n" +
+      "Do NOT use generic international stock backgrounds, tourism clichés, or flags as the main localization method. Localization should come from authentic everyday realism.\n\n" +
+      "==================================================\n" +
+      "9. LIGHTING & PHYSICAL REALISM\n" +
+      "==================================================\n\n" +
+      "Use lighting that is physically believable for the new environment. Ensure realistic sunlight direction, shadow direction, exposure, color temperature, ambient bounce, reflections, skin rendering, fabric rendering.\n" +
+      "The person and product must look naturally photographed inside the new environment, not pasted into it.\n\n" +
+      "==================================================\n" +
+      "10. PHOTOREALISM ONLY — NO CGI\n" +
+      "==================================================\n\n" +
+      "STRICTLY AVOID: CGI look, 3D-render look, plastic skin, waxy faces, over-smoothed skin, fake HDR, surreal lighting, distorted anatomy, malformed hands, duplicated/floating objects, melted details, strange reflections, fake textures, visual artifacts, low-quality AI patterns.\n" +
+      "The result must look like a premium real photograph.\n\n" +
+      "==================================================\n" +
+      "11. COMMERCIAL LOOK & FEEL\n" +
+      "==================================================\n\n" +
+      "The final result should feel premium, elegant, clean, modern, trustworthy, natural, polished, high-end, editorial, and e-commerce ready.\n" +
+      "Suitable for: product pages, collection pages, social ads, brand campaigns, premium marketplace visuals.\n\n" +
+      "==================================================\n" +
+      "12. FINAL INTERNAL VALIDATION — MUST PASS ALL\n" +
+      "==================================================\n\n" +
+      "Before finalizing, verify:\n" +
+      "✓ Core product/foreground item preserved accurately\n" +
+      "✓ Original person's identity completely gone\n" +
+      "✓ New face is clearly and substantially different\n" +
+      "✓ New person feels locally plausible for **{COUNTRY}**\n" +
+      "✓ Original background completely replaced\n" +
+      "✓ New environment feels strongly local and authentic\n" +
+      "✓ Zero readable unwanted text anywhere\n" +
+      "✓ No logos, brand names, watermarks, or labels\n" +
+      "✓ Image is photorealistic, not CGI\n" +
+      "✓ Subject integrates naturally into new location\n" +
+      "✓ Final image looks like a real premium commercial photo\n\n" +
+      "If any answer is NO, correct it before final output.\n\n" +
+      "==================================================\n" +
+      "ABSOLUTE FINAL COMMAND\n" +
+      "==================================================\n\n" +
+      "KEEP: core product, product details, useful pose, camera angle, framing, visual composition.\n" +
+      "CHANGE COMPLETELY: original human identity, face, background, environmental identity, all source branding and visible text.\n\n" +
+      "FINAL RULE:\n" +
+      "FACE CHANGE = COMPLETE AND OBVIOUS.\n" +
+      "BACKGROUND CHANGE = COMPLETE AND OBVIOUS.\n" +
+      "LOCAL COUNTRY / LOCATION VIBE = STRONG, AUTHENTIC, AND BELIEVABLE.\n" +
+      "PRODUCT CHANGE = NONE, EXCEPT NECESSARY CLEANUP FOR BRAND/TEXT REMOVAL.\n" +
+      "NO TEXT ANYWHERE UNLESS EXPLICITLY REQUESTED.",
   },
   {
     id: "logo-generator",
@@ -586,6 +701,15 @@ export default function Home() {
           } else {
             setStoreTasks({});
           }
+
+          // Load country learning from cloud
+          if (Array.isArray(data.userData.countryLearning) && data.userData.countryLearning.length > 0) {
+            setCountryLearning(data.userData.countryLearning);
+            localStorage.setItem("store_toolkit_country_learning", JSON.stringify(data.userData.countryLearning));
+          } else {
+            // Fall back to localStorage if cloud has no learning data
+            setCountryLearning(loadCountryLearning());
+          }
         } else {
           // Clean fresh start - Clear all dirty caches
           setStores([]);
@@ -610,13 +734,16 @@ export default function Home() {
   }
 
 
+  const [countryLearning, setCountryLearning] = useState<CountryLearningEntry[]>([]);
+
   function syncToServer(
     name: string,
     email: string,
     currentStores: StoreData[],
     currentActiveId: string,
     currentPrompts?: Record<string, string>,
-    currentTasks?: Record<string, TaskItem[]>
+    currentTasks?: Record<string, TaskItem[]>,
+    currentLearning?: CountryLearningEntry[]
   ) {
     if (!email) return;
 
@@ -643,6 +770,7 @@ export default function Home() {
           activeId: currentActiveId,
           customPrompts: currentPrompts !== undefined ? currentPrompts : customPrompts,
           tasks: sanitizedTasks,
+          countryLearning: currentLearning !== undefined ? currentLearning : countryLearning,
         }),
       }).catch(() => {});
     } catch (e) {}
@@ -725,6 +853,9 @@ export default function Home() {
     const next = stores.concat([newStore]);
     setStores(next);
     setActiveId(id);
+    learnFromStore(form); // Learn country settings for next time
+    const updatedLearning = loadCountryLearning(); // Reload after learning
+    setCountryLearning(updatedLearning);
     setForm({ ...emptyStore, rememberOptions: [...getDefaultChecked(rememberPresets)] });
     setShowForm(false);
 
@@ -732,13 +863,16 @@ export default function Home() {
       const cleanEmail = currentUser.email.trim().toLowerCase();
       const storageKey = "store_toolkit_data_" + cleanEmail;
       localStorage.setItem(storageKey, JSON.stringify({ stores: next, activeId: id }));
-      syncToServer(currentUser.name, cleanEmail, next, id, customPrompts, storeTasks);
+      syncToServer(currentUser.name, cleanEmail, next, id, customPrompts, storeTasks, updatedLearning);
     }
   }
 
   function updateStore() {
     const next = stores.map((s) => (s.id === form.id ? form : s));
     setStores(next);
+    learnFromStore(form); // Learn country settings for next time
+    const updatedLearning = loadCountryLearning(); // Reload after learning
+    setCountryLearning(updatedLearning);
     setForm({ ...emptyStore, rememberOptions: [...getDefaultChecked(rememberPresets)] });
     setShowForm(false);
 
@@ -746,7 +880,7 @@ export default function Home() {
       const cleanEmail = currentUser.email.trim().toLowerCase();
       const storageKey = "store_toolkit_data_" + cleanEmail;
       localStorage.setItem(storageKey, JSON.stringify({ stores: next, activeId: activeId }));
-      syncToServer(currentUser.name, cleanEmail, next, activeId, customPrompts, storeTasks);
+      syncToServer(currentUser.name, cleanEmail, next, activeId, customPrompts, storeTasks, updatedLearning);
     }
   }
 
