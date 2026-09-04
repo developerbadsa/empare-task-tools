@@ -24,7 +24,7 @@ import {
   Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { autoFillStore, getSupportedCountries } from "@/lib/autoFill";
+import { autoFillStore, getSupportedCountries, TOP_COUNTRIES } from "@/lib/autoFill";
 
 interface UserProfile {
   name: string;
@@ -59,6 +59,7 @@ export interface StoreData {
   language: string;
   currency: string;
   hours: string;
+  competitorSite?: string;
   notes?: string;
   rememberOptions?: string[];
 }
@@ -241,6 +242,7 @@ const emptyStore: StoreData = {
   language: "",
   currency: "",
   hours: "Monday–Friday, 9:00 a.m.–5:00 p.m.",
+  competitorSite: "",
   rememberOptions: [...getDefaultChecked(DEFAULT_REMEMBER_PRESETS)],
   notes: "",
 };
@@ -254,6 +256,7 @@ const DEFAULT_STORES: StoreData[] = [
     address: "ul. Chorzowska 107, 40-101 Katowice, Polska",
     email: "pomoc@luminarikatowice.com",
     domain: "luminarikatowice.com",
+    competitorSite: "",
     country: "Poland",
     language: "Polish",
     currency: "PLN",
@@ -273,6 +276,7 @@ const DEFAULT_STORES: StoreData[] = [
     address: "Østergade 12, 1100 København K, Danmark",
     email: "support@luminari.dk",
     domain: "luminari.dk",
+    competitorSite: "",
     country: "Denmark",
     language: "Danish",
     currency: "DKK",
@@ -1155,6 +1159,7 @@ export default function Home() {
     { key: "address", label: "Address", placeholder: "e.g. ul. Chorzowska 107, 40-101 Katowice, Polska" },
     { key: "email", label: "Email", placeholder: "e.g. pomoc@luminarikatowice.com" },
     { key: "domain", label: "Domain", placeholder: "e.g. luminarikatowice.com" },
+    { key: "competitorSite", label: "Competitor Site (Info Only)", placeholder: "e.g. competitor-store.com (for reference only, not used in prompts)" },
     { key: "country", label: "Country", r: true, placeholder: "e.g. Poland" },
     { key: "language", label: "Language", r: true, placeholder: "e.g. Polish" },
     { key: "currency", label: "Currency", r: true, placeholder: "e.g. PLN" },
@@ -1278,6 +1283,7 @@ export default function Home() {
               <span className="px-2 py-0.5 rounded-[4px] bg-slate-100 text-slate-700 text-xs font-medium">{active.country}</span>
               <span className="text-slate-300">|</span> <span>{active.company}</span>
               <span className="text-slate-300">|</span> <span>{active.domain}</span>
+              {active.competitorSite && <span className="px-2 py-0.5 rounded-[4px] bg-amber-50 text-amber-700 text-xs font-medium border border-amber-200">Ref: {active.competitorSite}</span>}
               <span className="text-slate-300">|</span> <span>{active.email}</span>
               <span className="text-slate-300">|</span> <span>{active.language}</span>
               <div className="ml-auto flex items-center gap-1.5">
